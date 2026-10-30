@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+:root {
+  /* Paleta cromática oficial — Fundación HOCES */
+  --color-sage: #a6b467;
+  --color-olive: #6a7835;
+  --color-forest: #1d3b19;
+  --color-white: #ffffff;
+
+  --color-background: var(--color-white);
+  --color-text: var(--color-forest);
+  --color-primary: var(--color-forest);
+  --color-secondary: var(--color-olive);
+  --color-accent: var(--color-sage);
+
+  --color-surface-muted: #f5f6f0;
+  --color-border: #e2e4d6;
+  --color-danger: #b3261e;
+  --color-success: #2e5e2a;
+
+  --font-heading: var(--font-nunito-sans);
+  --font-subheading: var(--font-manrope);
+  --font-body: var(--font-manrope);
+}
+
+@theme inline {
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-text);
+
+  --color-sage: var(--color-sage);
+  --color-olive: var(--color-olive);
+  --color-forest: var(--color-forest);
+  --color-surface-muted: var(--color-surface-muted);
+  --color-border: var(--color-border);
+  --color-danger: var(--color-danger);
+  --color-success: var(--color-success);
+
+  --font-heading: var(--font-heading);
+  --font-subheading: var(--font-subheading);
+  --font-body: var(--font-body);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+}
+
+.font-subheading {
+  font-family: var(--font-subheading);
+  font-weight: 700;
+}
+
+/* Visible focus ring for keyboard navigation — never remove without replacement */
+:focus-visible {
+  outline: 3px solid var(--color-olive);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  background: var(--color-forest);
+  color: white;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0 0 0.5rem 0;
+}
+
+.skip-link:focus {
+  left: 0;
+}
+
+.prose-content p {
+  margin-bottom: 1rem;
+  line-height: 1.7;
+}
+
+.prose-content ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.prose-content li {
+  margin-bottom: 0.4rem;
+}

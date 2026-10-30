@@ -1,0 +1,302 @@
+// Prisma schema — Fundación HOCES
+// PostgreSQL (Supabase), usado tanto en desarrollo como en producción.
+//
+// Nota: los campos que en otros proyectos serían `enum` nativo se modelan
+// aquí como `String` (herencia del esquema original en SQLite, que no
+// soporta enums).
+// Los valores permitidos se validan en la capa de aplicación con Zod
+// (ver src/lib/validations.ts), que es la fuente de verdad de cada "enum":
+//   ContentStatus    -> DRAFT | PUBLISHED | ARCHIVED
+//   DocumentCategory -> MEMORIA_ANUAL | INFORME_GESTION | TRANSPARENCIA | OTRO
+//   ContactReason    -> INFORMACION | AGENDAR_HORA | DONACION | COLEGIOS | VOLUNTARIADO | OTRO
+//   MessageStatus    -> NEW | READ | ARCHIVED
+//   PaymentGateway   -> TRANSBANK | MERCADOPAGO
+//   DonationStatus   -> PENDING | APPROVED | REJECTED | CANCELLED
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  isActive     Boolean  @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  activityLogs AdminActivityLog[]
+  sessions     Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  userAgent String   @default("")
+  ipHash    String   @default("")
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model LoginAttempt {
+  id             String    @id @default(cuid())
+  email          String
+  ipHash         String
+  attemptCount   Int       @default(1)
+  firstAttemptAt DateTime  @default(now())
+  lockedUntil    DateTime?
+
+  @@unique([email, ipHash])
+}
+
+model AdminActivityLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  action     String
+  entityType String
+  entityId   String?
+  metadata   String?
+  createdAt  DateTime @default(now())
+}
+
+model Media {
+  id          String   @id @default(cuid())
+  filename    String
+  path        String
+  altText     String   @default("")
+  description String   @default("")
+  usageNote   String   @default("")
+  mimeType    String
+  size        Int
+  width       Int?
+  height      Int?
+  createdAt   DateTime @default(now())
+
+  teamPhotos       TeamMember[]           @relation("TeamPhoto")
+  programCovers    Program[]              @relation("ProgramCover")
+  programGallery   ProgramGalleryImage[]
+  documentCovers   Document[]             @relation("DocumentCover")
+  newsCovers       NewsPost[]             @relation("NewsCover")
+  testimonialMedia Testimonial[]          @relation("TestimonialMedia")
+  homeBlockImages  HomeBlock[]            @relation("HomeBlockImage")
+}
+
+model SiteSetting {
+  id                       Int      @id @default(1)
+  orgName                  String   @default("Fundación HOCES")
+  legalName                String   @default("Fundación Hoces")
+  rut                      String   @default("65.255.723-6")
+  legalRepresentative      String   @default("Solange Alessod (Directora)")
+  slogan                   String   @default("Cosechando Sueños")
+  address                  String   @default("Camino Melipilla 601")
+  comuna                   String   @default("Padre Hurtado")
+  region                   String   @default("Región Metropolitana")
+  phone                    String   @default("+56 9 6406 0198")
+  whatsapp                 String   @default("+56964060198")
+  email                    String   @default("")
+  instagram                String   @default("fundacionhoces")
+  facebook                 String   @default("fundacionhoces")
+  tiktok                   String   @default("")
+  youtube                  String   @default("")
+  linkedin                 String   @default("")
+  logoMediaId              String?
+  faviconMediaId           String?
+  colorSage                String   @default("#A6B467")
+  colorOlive               String   @default("#6A7835")
+  colorForest              String   @default("#1D3B19")
+  colorWhite               String   @default("#FFFFFF")
+  footerText               String   @default("")
+  donationBankInfo         String   @default("")
+  donationSuggestedAmounts String   @default("[10000,20000,50000,100000]")
+  donationOnlineEnabled    Boolean  @default(false)
+  bookingEnabled           Boolean  @default(false)
+  bookingDepositAmount     Int      @default(10000)
+  metaDescriptionDefault   String   @default("")
+  updatedAt                DateTime @updatedAt
+}
+
+model AboutContent {
+  id               Int      @id @default(1)
+  historia         String   @default("")
+  mision           String   @default("")
+  vision           String   @default("")
+  proposito        String   @default("")
+  valores          String   @default("[]")
+  hitos            String   @default("[]")
+  enfoqueCristiano String   @default("")
+  versiculo        String   @default("")
+  updatedAt        DateTime @updatedAt
+}
+
+model HomeBlock {
+  id        String   @id @default(cuid())
+  type      String
+  order     Int      @default(0)
+  visible   Boolean  @default(true)
+  title     String   @default("")
+  subtitle  String   @default("")
+  body      String   @default("")
+  ctaLabel  String   @default("")
+  ctaLink   String   @default("")
+  imageId   String?
+  image     Media?   @relation("HomeBlockImage", fields: [imageId], references: [id])
+  extraJson String   @default("{}")
+  updatedAt DateTime @updatedAt
+}
+
+model Program {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  name             String
+  shortDescription String   @default("")
+  description      String   @default("")
+  targetAudience   String   @default("")
+  objectives       String   @default("")
+  activities       String   @default("")
+  ctaLabel         String   @default("Consultar por este servicio")
+  ctaLink          String   @default("")
+  coverImageId     String?
+  coverImage       Media?   @relation("ProgramCover", fields: [coverImageId], references: [id])
+  gallery          ProgramGalleryImage[]
+  order            Int      @default(0)
+  status           String   @default("DRAFT")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model ProgramGalleryImage {
+  id        String  @id @default(cuid())
+  programId String
+  program   Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+  mediaId   String
+  media     Media   @relation(fields: [mediaId], references: [id])
+  order     Int     @default(0)
+}
+
+model TeamMember {
+  id              String   @id @default(cuid())
+  group           String   @default("EQUIPO")
+  name            String
+  role            String
+  specialty       String   @default("")
+  experienceYears Int?
+  bio             String   @default("")
+  photoId         String?
+  photo           Media?   @relation("TeamPhoto", fields: [photoId], references: [id])
+  showPhoto       Boolean  @default(false)
+  isPlaceholder   Boolean  @default(false)
+  order           Int      @default(0)
+  status          String   @default("DRAFT")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model NewsPost {
+  id              String    @id @default(cuid())
+  slug            String    @unique
+  title           String
+  subtitle        String    @default("")
+  body            String    @default("")
+  category        String    @default("Noticias")
+  author          String    @default("Fundación HOCES")
+  coverImageId    String?
+  coverImage      Media?    @relation("NewsCover", fields: [coverImageId], references: [id])
+  status          String    @default("DRAFT")
+  metaTitle       String    @default("")
+  metaDescription String    @default("")
+  publishedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Document {
+  id           String   @id @default(cuid())
+  title        String
+  description  String   @default("")
+  category     String   @default("OTRO")
+  year         Int
+  filePath     String
+  fileName     String
+  fileSize     Int
+  coverImageId String?
+  coverImage   Media?   @relation("DocumentCover", fields: [coverImageId], references: [id])
+  order        Int      @default(0)
+  status       String   @default("DRAFT")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Testimonial {
+  id           String   @id @default(cuid())
+  authorLabel  String
+  content      String
+  isAnonymous  Boolean  @default(true)
+  consentGiven Boolean  @default(false)
+  mediaId      String?
+  media        Media?   @relation("TestimonialMedia", fields: [mediaId], references: [id])
+  order        Int      @default(0)
+  status       String   @default("DRAFT")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model FaqItem {
+  id       String @id @default(cuid())
+  question String
+  answer   String
+  order    Int    @default(0)
+  status   String @default("DRAFT")
+}
+
+model ContactMessage {
+  id             String   @id @default(cuid())
+  name           String
+  email          String
+  phone          String   @default("")
+  reason         String   @default("OTRO")
+  message        String
+  consentPrivacy Boolean  @default(false)
+  status         String   @default("NEW")
+  ipHash         String   @default("")
+  createdAt      DateTime @default(now())
+}
+
+// ---- Fase 2 (sin UI pública conectada todavía — esquema listo para activarse) ----
+
+model Donation {
+  id          String    @id @default(cuid())
+  amount      Int
+  currency    String    @default("CLP")
+  gateway     String
+  buyOrder    String?   @unique
+  token       String?   @unique
+  externalId  String?
+  status      String    @default("PENDING")
+  donorName   String    @default("")
+  donorEmail  String    @default("")
+  errorLog    String    @default("")
+  createdAt   DateTime  @default(now())
+  confirmedAt DateTime?
+}
+
+model BookingRequest {
+  id            String    @id @default(cuid())
+  programId     String?
+  name          String
+  email         String
+  phone         String
+  preferredDate DateTime?
+  notes         String    @default("")
+  depositAmount Int       @default(10000)
+  depositStatus String    @default("PENDING")
+  createdAt     DateTime  @default(now())
+}
