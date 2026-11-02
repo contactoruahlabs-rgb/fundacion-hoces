@@ -1,8 +1,12 @@
 import { getSiteSettings } from "@/lib/site-data";
+import { prisma } from "@/lib/prisma";
 import { SiteSettingForm } from "@/components/admin/SiteSettingForm";
 
 export default async function AdminSettingsPage() {
-  const settings = await getSiteSettings();
+  const [settings, media] = await Promise.all([
+    getSiteSettings(),
+    prisma.media.findMany({ orderBy: { createdAt: "desc" }, take: 60 }),
+  ]);
 
   return (
     <div>
@@ -11,7 +15,7 @@ export default async function AdminSettingsPage() {
         Datos institucionales, contacto, redes sociales y configuración de donaciones.
       </p>
       <div className="mt-8 max-w-3xl rounded-2xl border border-border bg-white p-6 sm:p-8">
-        <SiteSettingForm settings={settings} />
+        <SiteSettingForm settings={settings} mediaOptions={media} />
       </div>
     </div>
   );

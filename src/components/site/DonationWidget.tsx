@@ -121,7 +121,7 @@ export function DonationWidget({
         <label htmlFor="custom-amount" className="text-xs font-semibold uppercase tracking-wide text-forest/70">
           Monto personalizado (CLP)
         </label>
-        <div className="mt-1 flex items-center rounded-lg border border-border bg-white px-3.5 focus-within:border-olive focus-within:ring-2 focus-within:ring-olive/30">
+        <div className="mt-1 flex items-center rounded-lg border border-border bg-white px-3.5">
           <span className="text-sm text-forest/70">$</span>
           <input
             id="custom-amount"

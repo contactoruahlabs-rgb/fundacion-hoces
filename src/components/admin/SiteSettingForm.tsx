@@ -6,15 +6,17 @@ import { initialActionState } from "@/lib/action-state";
 import { TextInput, TextArea, FormField } from "@/components/admin/FormField";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { FormStatusBanner } from "@/components/admin/FormStatusBanner";
+import { ImagePicker, type MediaOption } from "@/components/admin/ImagePicker";
 import type { SiteSetting } from "@prisma/client";
 
-export function SiteSettingForm({ settings }: { settings: SiteSetting }) {
+export function SiteSettingForm({ settings, mediaOptions }: { settings: SiteSetting; mediaOptions: MediaOption[] }) {
   const [state, formAction] = useActionState(updateSiteSettingAction, initialActionState);
 
   return (
     <form action={formAction} className="space-y-8">
       <section className="space-y-5">
         <h2 className="font-subheading text-sm uppercase tracking-wide text-olive">Identidad institucional</h2>
+        <ImagePicker name="logoMediaId" label="Logo del sitio" options={mediaOptions} defaultValue={settings.logoMediaId} />
         <div className="grid gap-5 sm:grid-cols-2">
           <FormField label="Nombre público" name="orgName" required error={state.fieldErrors?.orgName}>
             <TextInput id="orgName" name="orgName" defaultValue={settings.orgName} required />

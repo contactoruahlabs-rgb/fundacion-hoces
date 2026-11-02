@@ -114,6 +114,7 @@ export const siteSettingSchema = z.object({
   donationBankInfo: z.string().trim().max(2000).optional().default(""),
   donationSuggestedAmounts: z.string().trim().optional().default("[]"),
   metaDescriptionDefault: z.string().trim().max(300).optional().default(""),
+  logoMediaId: z.string().trim().optional().nullable(),
 });
 
 export const aboutContentSchema = z.object({

@@ -26,10 +26,11 @@ export async function updateSiteSettingAction(
     };
   }
 
+  const data = { ...parsed.data, logoMediaId: parsed.data.logoMediaId || null };
   await prisma.siteSetting.upsert({
     where: { id: 1 },
-    create: { id: 1, ...parsed.data },
-    update: parsed.data,
+    create: { id: 1, ...data },
+    update: data,
   });
   await logAdminActivity(user.id, "UPDATE", "SiteSetting", "1");
 

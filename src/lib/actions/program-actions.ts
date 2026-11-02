@@ -89,3 +89,28 @@ export async function deleteProgramAction(id: string) {
   revalidatePath("/admin/servicios");
   revalidatePath("/servicios");
 }
+
+export async function addProgramGalleryImageAction(programId: string, mediaId: string) {
+  const user = await requireAdmin();
+  const program = await prisma.program.findUnique({ where: { id: programId }, select: { slug: true } });
+  if (!program) return;
+
+  const count = await prisma.programGalleryImage.count({ where: { programId } });
+  await prisma.programGalleryImage.create({ data: { programId, mediaId, order: count } });
+  await logAdminActivity(user.id, "CREATE", "ProgramGalleryImage", mediaId);
+
+  revalidatePath(`/admin/servicios/${programId}`);
+  revalidatePath(`/servicios/${program.slug}`);
+}
+
+export async function removeProgramGalleryImageAction(galleryImageId: string) {
+  const user = await requireAdmin();
+  const item = await prisma.programGalleryImage.delete({
+    where: { id: galleryImageId },
+    include: { program: { select: { slug: true } } },
+  });
+  await logAdminActivity(user.id, "DELETE", "ProgramGalleryImage", galleryImageId);
+
+  revalidatePath(`/admin/servicios/${item.programId}`);
+  revalidatePath(`/servicios/${item.program.slug}`);
+}

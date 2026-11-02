@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { Container } from "./Container";
 import { ButtonLink } from "./Button";
 
@@ -35,8 +35,29 @@ export function Header({
   whatsapp?: string;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const logoClicks = useRef<{ count: number; timer: ReturnType<typeof setTimeout> | null }>({
+    count: 0,
+    timer: null,
+  });
+
+  const handleLogoClick = (e: React.MouseEvent) => {
+    const clicks = logoClicks.current;
+    clicks.count += 1;
+    if (clicks.timer) clearTimeout(clicks.timer);
+    if (clicks.count >= 4) {
+      clicks.count = 0;
+      e.preventDefault();
+      closeMenu();
+      router.push("/admin/login");
+      return;
+    }
+    clicks.timer = setTimeout(() => {
+      clicks.count = 0;
+    }, 800);
+  };
 
   // Evita el scroll del fondo mientras el menú de pantalla completa está abierto.
   useEffect(() => {
@@ -62,7 +83,7 @@ export function Header({
     <>
     <header className="sticky top-0 z-40 border-b border-border bg-white/95 backdrop-blur">
       <Container className="flex items-center justify-between gap-2 py-3">
-        <Link href="/" className="flex min-w-0 items-center gap-3" onClick={closeMenu}>
+        <Link href="/" className="flex min-w-0 items-center gap-3" onClick={handleLogoClick}>
           {logoPath ? (
             <Image src={logoPath} alt={orgName} width={44} height={44} className="h-11 w-11 shrink-0 object-contain" />
           ) : (
