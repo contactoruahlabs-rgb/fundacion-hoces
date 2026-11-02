@@ -15,8 +15,8 @@ export function GalleryManager({
 }: {
   gallery: GalleryItem[];
   mediaOptions: MediaOption[];
-  onAdd: (mediaId: string) => Promise<unknown>;
-  onRemove: (galleryImageId: string) => Promise<unknown>;
+  onAdd: (mediaId: string) => Promise<void>;
+  onRemove: (galleryImageId: string) => Promise<void>;
 }) {
   const [isPending, startTransition] = useTransition();
   const usedIds = new Set(gallery.map((g) => g.mediaId));
