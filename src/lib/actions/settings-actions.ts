@@ -71,3 +71,22 @@ export async function updateAboutContentAction(
   revalidatePath("/");
   return { ok: true, message: "Contenido institucional guardado." };
 }
+
+export async function addAboutGalleryImageAction(mediaId: string) {
+  const user = await requireAdmin();
+  const count = await prisma.aboutGalleryImage.count();
+  await prisma.aboutGalleryImage.create({ data: { mediaId, order: count } });
+  await logAdminActivity(user.id, "CREATE", "AboutGalleryImage", mediaId);
+
+  revalidatePath("/admin/quienes-somos");
+  revalidatePath("/quienes-somos");
+}
+
+export async function removeAboutGalleryImageAction(galleryImageId: string) {
+  const user = await requireAdmin();
+  await prisma.aboutGalleryImage.delete({ where: { id: galleryImageId } });
+  await logAdminActivity(user.id, "DELETE", "AboutGalleryImage", galleryImageId);
+
+  revalidatePath("/admin/quienes-somos");
+  revalidatePath("/quienes-somos");
+}

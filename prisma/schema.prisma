@@ -88,6 +88,7 @@ model Media {
   newsCovers       NewsPost[]             @relation("NewsCover")
   testimonialMedia Testimonial[]          @relation("TestimonialMedia")
   homeBlockImages  HomeBlock[]            @relation("HomeBlockImage")
+  aboutGallery     AboutGalleryImage[]
 }
 
 model SiteSetting {
@@ -135,6 +136,13 @@ model AboutContent {
   enfoqueCristiano String   @default("")
   versiculo        String   @default("")
   updatedAt        DateTime @updatedAt
+}
+
+model AboutGalleryImage {
+  id      String @id @default(cuid())
+  mediaId String
+  media   Media  @relation(fields: [mediaId], references: [id])
+  order   Int    @default(0)
 }
 
 model HomeBlock {

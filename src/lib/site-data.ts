@@ -19,3 +19,7 @@ export async function getSiteLogoPath() {
   const media = await prisma.media.findUnique({ where: { id: settings.logoMediaId } });
   return media?.path ?? null;
 }
+
+export async function getAboutGallery() {
+  return prisma.aboutGalleryImage.findMany({ include: { media: true }, orderBy: { order: "asc" } });
+}

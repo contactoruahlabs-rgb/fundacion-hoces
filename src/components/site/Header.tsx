@@ -143,7 +143,7 @@ export function Header({
         <Link
           href="/donaciones"
           onClick={closeMenu}
-          className="shrink-0 rounded-md bg-olive px-3.5 py-2 text-xs font-bold text-white transition-colors hover:bg-[#565f2a] sm:px-5 sm:py-2.5 sm:text-sm"
+          className="flex shrink-0 items-center self-stretch bg-[#eca10c] px-4 text-xs font-bold text-forest transition-colors hover:bg-[#d39209] sm:px-6 sm:text-sm"
         >
           Donar
         </Link>

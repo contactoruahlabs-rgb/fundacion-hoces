@@ -120,3 +120,12 @@ h1, h2, h3, h4 {
 .prose-content li {
   margin-bottom: 0.4rem;
 }
+
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

@@ -3,23 +3,20 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useTransition } from "react";
-import {
-  addProgramGalleryImageAction,
-  removeProgramGalleryImageAction,
-} from "@/lib/actions/program-actions";
 import type { MediaOption } from "@/components/admin/ImagePicker";
-import type { ProgramGalleryImage, Media } from "@prisma/client";
 
-type GalleryItem = ProgramGalleryImage & { media: Media };
+type GalleryItem = { id: string; mediaId: string; media: { path: string; altText: string } };
 
-export function ProgramGalleryManager({
-  programId,
+export function GalleryManager({
   gallery,
   mediaOptions,
+  onAdd,
+  onRemove,
 }: {
-  programId: string;
   gallery: GalleryItem[];
   mediaOptions: MediaOption[];
+  onAdd: (mediaId: string) => Promise<unknown>;
+  onRemove: (galleryImageId: string) => Promise<unknown>;
 }) {
   const [isPending, startTransition] = useTransition();
   const usedIds = new Set(gallery.map((g) => g.mediaId));
@@ -37,7 +34,7 @@ export function ProgramGalleryManager({
                 disabled={isPending}
                 onClick={() => {
                   if (!window.confirm("¿Quitar esta imagen de la galería?")) return;
-                  startTransition(() => removeProgramGalleryImageAction(item.id));
+                  startTransition(() => onRemove(item.id));
                 }}
                 className="absolute inset-0 flex items-center justify-center bg-forest/70 text-xs font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100 disabled:opacity-60"
               >
@@ -65,7 +62,7 @@ export function ProgramGalleryManager({
               key={opt.id}
               type="button"
               disabled={isPending}
-              onClick={() => startTransition(() => addProgramGalleryImageAction(programId, opt.id))}
+              onClick={() => startTransition(() => onAdd(opt.id))}
               className="relative aspect-square overflow-hidden rounded-lg border border-border transition-opacity hover:opacity-80 disabled:opacity-60"
               aria-label={opt.altText || "Agregar imagen sin descripción"}
             >

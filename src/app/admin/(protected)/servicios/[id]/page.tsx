@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ProgramForm } from "@/components/admin/ProgramForm";
-import { ProgramGalleryManager } from "@/components/admin/ProgramGalleryManager";
+import { GalleryManager } from "@/components/admin/GalleryManager";
+import { addProgramGalleryImageAction, removeProgramGalleryImageAction } from "@/lib/actions/program-actions";
 
 export default async function EditProgramPage({
   params,
@@ -30,7 +31,12 @@ export default async function EditProgramPage({
           Imágenes adicionales que se muestran en la página pública de este servicio.
         </p>
         <div className="mt-5">
-          <ProgramGalleryManager programId={program.id} gallery={program.gallery} mediaOptions={media} />
+          <GalleryManager
+            gallery={program.gallery}
+            mediaOptions={media}
+            onAdd={addProgramGalleryImageAction.bind(null, program.id)}
+            onRemove={removeProgramGalleryImageAction}
+          />
         </div>
       </div>
     </div>
