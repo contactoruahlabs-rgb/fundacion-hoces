@@ -86,8 +86,8 @@ export function Header({
       <Container className="flex items-center justify-between gap-2 py-3">
         <Link href="/" className="flex min-w-0 items-center gap-3" onClick={handleLogoClick}>
           {logoPath ? (
-            <span className="relative h-10 w-40 shrink-0 sm:h-12 sm:w-48">
-              <Image src={logoPath} alt={orgName} fill className="object-contain object-left" sizes="200px" priority />
+            <span className="relative h-14 w-60 shrink-0 sm:h-16 sm:w-72">
+              <Image src={logoPath} alt={orgName} fill className="object-contain object-left" sizes="290px" priority />
             </span>
           ) : (
             <>
