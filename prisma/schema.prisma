@@ -88,8 +88,9 @@ model Media {
   newsCovers       NewsPost[]             @relation("NewsCover")
   testimonialMedia Testimonial[]          @relation("TestimonialMedia")
   homeBlockImages  HomeBlock[]            @relation("HomeBlockImage")
-  aboutGallery     AboutGalleryImage[]
   aboutHistoria    AboutContent[]         @relation("AboutHistoriaImage")
+  hitoCovers       Hito[]                 @relation("HitoCover")
+  hitoImages       HitoImage[]
 }
 
 model SiteSetting {
@@ -141,13 +142,23 @@ model AboutContent {
   updatedAt        DateTime @updatedAt
 }
 
-model AboutGalleryImage {
-  id          String @id @default(cuid())
-  mediaId     String
-  media       Media  @relation(fields: [mediaId], references: [id])
-  title       String @default("")
-  description String @default("")
-  order       Int    @default(0)
+model Hito {
+  id           String      @id @default(cuid())
+  title        String      @default("")
+  description  String      @default("")
+  order        Int         @default(0)
+  coverImageId String?
+  coverImage   Media?      @relation("HitoCover", fields: [coverImageId], references: [id])
+  images       HitoImage[]
+}
+
+model HitoImage {
+  id      String @id @default(cuid())
+  hitoId  String
+  hito    Hito   @relation(fields: [hitoId], references: [id], onDelete: Cascade)
+  mediaId String
+  media   Media  @relation(fields: [mediaId], references: [id])
+  order   Int    @default(0)
 }
 
 model HomeBlock {

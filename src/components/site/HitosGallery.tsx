@@ -3,22 +3,40 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
-type HitoImage = { id: string; path: string; altText: string; title: string; description: string };
+type Photo = { id: string; path: string; altText: string };
+type HitoItem = {
+  id: string;
+  title: string;
+  description: string;
+  cover: Photo | null;
+  photos: Photo[];
+};
 
-export function HitosGallery({ images }: { images: HitoImage[] }) {
+export function HitosGallery({ hitos }: { hitos: HitoItem[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openHitoIndex, setOpenHitoIndex] = useState<number | null>(null);
+  const [photoIndex, setPhotoIndex] = useState(0);
 
   const scroll = (dir: 1 | -1) => {
     trackRef.current?.scrollBy({ left: dir * 260, behavior: "smooth" });
   };
 
+  const openHito = (i: number) => {
+    const hito = hitos[i];
+    const coverIndex = hito.photos.findIndex((p) => p.id === hito.cover?.id);
+    setPhotoIndex(coverIndex >= 0 ? coverIndex : 0);
+    setOpenHitoIndex(i);
+  };
+
+  const currentHito = openHitoIndex !== null ? hitos[openHitoIndex] : null;
+  const photos = currentHito?.photos ?? [];
+
   useEffect(() => {
-    if (openIndex === null) return;
+    if (openHitoIndex === null) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpenIndex(null);
-      if (e.key === "ArrowRight") setOpenIndex((i) => (i === null ? i : (i + 1) % images.length));
-      if (e.key === "ArrowLeft") setOpenIndex((i) => (i === null ? i : (i - 1 + images.length) % images.length));
+      if (e.key === "Escape") setOpenHitoIndex(null);
+      if (e.key === "ArrowRight") setPhotoIndex((i) => (i + 1) % photos.length);
+      if (e.key === "ArrowLeft") setPhotoIndex((i) => (i - 1 + photos.length) % photos.length);
     };
     window.addEventListener("keydown", onKey);
     document.documentElement.style.overflow = "hidden";
@@ -26,11 +44,11 @@ export function HitosGallery({ images }: { images: HitoImage[] }) {
       window.removeEventListener("keydown", onKey);
       document.documentElement.style.overflow = "";
     };
-  }, [openIndex, images.length]);
+  }, [openHitoIndex, photos.length]);
 
-  if (images.length === 0) return null;
+  if (hitos.length === 0) return null;
 
-  const current = openIndex !== null ? images[openIndex] : null;
+  const currentPhoto = photos[photoIndex] ?? null;
 
   return (
     <div className="relative mt-8">
@@ -38,38 +56,45 @@ export function HitosGallery({ images }: { images: HitoImage[] }) {
         ref={trackRef}
         className="scrollbar-hide flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2"
       >
-        {images.map((img, i) => (
+        {hitos.map((hito, i) => (
           <button
-            key={img.id}
+            key={hito.id}
             type="button"
-            onClick={() => setOpenIndex(i)}
+            onClick={() => openHito(i)}
             className="group w-[65vw] shrink-0 snap-start text-left sm:w-56"
           >
-            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl">
-              <Image
-                src={img.path}
-                alt={img.altText}
-                fill
-                className="object-cover transition-transform duration-200 group-hover:scale-105"
-                sizes="(max-width: 640px) 65vw, 224px"
-              />
+            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-sage/15">
+              {hito.cover && (
+                <Image
+                  src={hito.cover.path}
+                  alt={hito.cover.altText || hito.title}
+                  fill
+                  className="object-cover transition-transform duration-200 group-hover:scale-105"
+                  sizes="(max-width: 640px) 65vw, 224px"
+                />
+              )}
+              {hito.photos.length > 1 && (
+                <span className="absolute right-2 top-2 rounded-full bg-black/50 px-2 py-0.5 text-[11px] font-medium text-white">
+                  +{hito.photos.length - 1}
+                </span>
+              )}
             </div>
-            {(img.title || img.description) && (
+            {(hito.title || hito.description) && (
               <div className="mt-2">
-                {img.title && <p className="font-subheading text-sm text-forest">{img.title}</p>}
-                {img.description && (
-                  <p className="mt-0.5 line-clamp-2 text-xs text-forest/70">{img.description}</p>
+                {hito.title && <p className="font-subheading text-sm text-forest">{hito.title}</p>}
+                {hito.description && (
+                  <p className="mt-0.5 line-clamp-2 text-xs text-forest/70">{hito.description}</p>
                 )}
               </div>
             )}
           </button>
         ))}
       </div>
-      {images.length > 1 && (
+      {hitos.length > 1 && (
         <>
           <button
             type="button"
-            aria-label="Ver fotos anteriores"
+            aria-label="Ver hitos anteriores"
             onClick={() => scroll(-1)}
             className="absolute left-0 top-[38%] hidden -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white p-2 text-forest shadow-md sm:flex"
           >
@@ -79,7 +104,7 @@ export function HitosGallery({ images }: { images: HitoImage[] }) {
           </button>
           <button
             type="button"
-            aria-label="Ver fotos siguientes"
+            aria-label="Ver hitos siguientes"
             onClick={() => scroll(1)}
             className="absolute right-0 top-[38%] hidden -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full bg-white p-2 text-forest shadow-md sm:flex"
           >
@@ -90,17 +115,17 @@ export function HitosGallery({ images }: { images: HitoImage[] }) {
         </>
       )}
 
-      {current && (
+      {currentHito && currentPhoto && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-forest/95 p-4 sm:p-8"
           role="dialog"
           aria-modal="true"
-          onClick={() => setOpenIndex(null)}
+          onClick={() => setOpenHitoIndex(null)}
         >
           <button
             type="button"
             aria-label="Cerrar"
-            onClick={() => setOpenIndex(null)}
+            onClick={() => setOpenHitoIndex(null)}
             className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -113,24 +138,26 @@ export function HitosGallery({ images }: { images: HitoImage[] }) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-black/20">
-              <Image src={current.path} alt={current.altText} fill className="object-contain" sizes="90vw" />
+              <Image src={currentPhoto.path} alt={currentPhoto.altText} fill className="object-contain" sizes="90vw" />
             </div>
-            {(current.title || current.description) && (
+            {(currentHito.title || currentHito.description) && (
               <div className="mt-4 max-w-xl text-center text-white">
-                {current.title && <p className="font-heading text-lg font-bold">{current.title}</p>}
-                {current.description && <p className="mt-1 text-sm text-white/80">{current.description}</p>}
+                {currentHito.title && <p className="font-heading text-lg font-bold">{currentHito.title}</p>}
+                {currentHito.description && <p className="mt-1 text-sm text-white/80">{currentHito.description}</p>}
               </div>
             )}
-            <p className="mt-2 text-xs text-white/50">
-              {openIndex! + 1} / {images.length}
-            </p>
+            {photos.length > 1 && (
+              <p className="mt-2 text-xs text-white/50">
+                {photoIndex + 1} / {photos.length}
+              </p>
+            )}
 
-            {images.length > 1 && (
+            {photos.length > 1 && (
               <>
                 <button
                   type="button"
                   aria-label="Foto anterior"
-                  onClick={() => setOpenIndex((i) => (i === null ? i : (i - 1 + images.length) % images.length))}
+                  onClick={() => setPhotoIndex((i) => (i - 1 + photos.length) % photos.length)}
                   className="absolute left-0 top-1/3 flex h-10 w-10 -translate-x-2 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 sm:-translate-x-14"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -140,7 +167,7 @@ export function HitosGallery({ images }: { images: HitoImage[] }) {
                 <button
                   type="button"
                   aria-label="Foto siguiente"
-                  onClick={() => setOpenIndex((i) => (i === null ? i : (i + 1) % images.length))}
+                  onClick={() => setPhotoIndex((i) => (i + 1) % photos.length)}
                   className="absolute right-0 top-1/3 flex h-10 w-10 translate-x-2 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 sm:translate-x-14"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">

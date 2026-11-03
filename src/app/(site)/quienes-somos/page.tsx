@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Image from "next/image";
-import { getAboutContent, getSiteSettings, getAboutGallery } from "@/lib/site-data";
+import { getAboutContent, getSiteSettings, getHitos } from "@/lib/site-data";
 import { Container } from "@/components/site/Container";
 import { Eyebrow } from "@/components/site/Eyebrow";
 import { PillarRow } from "@/components/site/PillarRow";
@@ -15,12 +15,12 @@ export const metadata: Metadata = {
 };
 
 type Valor = { titulo: string; descripcion?: string };
-type Hito = { anio: string; texto: string };
+type TimelineEntry = { anio: string; texto: string };
 
 export default async function QuienesSomosPage() {
-  const [about, settings, gallery] = await Promise.all([getAboutContent(), getSiteSettings(), getAboutGallery()]);
+  const [about, settings, hitos] = await Promise.all([getAboutContent(), getSiteSettings(), getHitos()]);
   const valores: Valor[] = JSON.parse(about.valores || "[]");
-  const hitos: Hito[] = JSON.parse(about.hitos || "[]");
+  const timeline: TimelineEntry[] = JSON.parse(about.hitos || "[]");
 
   const pillars: { title: string; children: ReactNode }[] = [];
   if (about.mision) {
@@ -130,13 +130,13 @@ export default async function QuienesSomosPage() {
         </section>
       )}
 
-      {(hitos.length > 0 || gallery.length > 0) && (
+      {(timeline.length > 0 || hitos.length > 0) && (
         <section id="hitos" className="mt-12 scroll-mt-24">
           <Container className="max-w-3xl">
             <h2 className="font-heading text-2xl font-bold text-forest">Hitos</h2>
-            {hitos.length > 0 && (
+            {timeline.length > 0 && (
               <ol className="mt-6 space-y-4 border-l-2 border-sage pl-5">
-                {hitos.map((h) => (
+                {timeline.map((h) => (
                   <li key={h.anio + h.texto}>
                     <p className="font-subheading text-olive">{h.anio}</p>
                     <p className="text-sm text-forest/80">{h.texto}</p>
@@ -145,12 +145,12 @@ export default async function QuienesSomosPage() {
               </ol>
             )}
             <HitosGallery
-              images={gallery.map((g) => ({
-                id: g.id,
-                path: g.media.path,
-                altText: g.media.altText,
-                title: g.title,
-                description: g.description,
+              hitos={hitos.map((h) => ({
+                id: h.id,
+                title: h.title,
+                description: h.description,
+                cover: h.coverImage ? { id: h.coverImage.id, path: h.coverImage.path, altText: h.coverImage.altText } : null,
+                photos: h.images.map((img) => ({ id: img.media.id, path: img.media.path, altText: img.media.altText })),
               }))}
             />
           </Container>

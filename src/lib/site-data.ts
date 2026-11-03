@@ -20,6 +20,9 @@ export async function getSiteLogoPath() {
   return media?.path ?? null;
 }
 
-export async function getAboutGallery() {
-  return prisma.aboutGalleryImage.findMany({ include: { media: true }, orderBy: { order: "asc" } });
+export async function getHitos() {
+  return prisma.hito.findMany({
+    include: { coverImage: true, images: { include: { media: true }, orderBy: { order: "asc" } } },
+    orderBy: { order: "asc" },
+  });
 }
