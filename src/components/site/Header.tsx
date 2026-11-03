@@ -86,13 +86,17 @@ export function Header({
       <Container className="flex items-center justify-between gap-2 py-3">
         <Link href="/" className="flex min-w-0 items-center gap-3" onClick={handleLogoClick}>
           {logoPath ? (
-            <Image src={logoPath} alt={orgName} width={44} height={44} className="h-11 w-11 shrink-0 object-contain" />
-          ) : (
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-forest text-white font-heading font-bold">
-              H
+            <span className="relative h-10 w-40 shrink-0 sm:h-12 sm:w-48">
+              <Image src={logoPath} alt={orgName} fill className="object-contain object-left" sizes="200px" priority />
             </span>
+          ) : (
+            <>
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-forest text-white font-heading font-bold">
+                H
+              </span>
+              <span className="truncate font-heading text-lg font-bold text-forest">{orgName}</span>
+            </>
           )}
-          <span className="truncate font-heading text-lg font-bold text-forest">{orgName}</span>
         </Link>
 
         <nav className="hidden lg:flex items-center gap-7" aria-label="Navegación principal">
