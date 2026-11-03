@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default async function NoticiasPage() {
   const posts = await prisma.newsPost.findMany({
     where: { status: "PUBLISHED" },
-    orderBy: { publishedAt: "desc" },
+    orderBy: { order: "asc" },
     include: { coverImage: true },
   });
 

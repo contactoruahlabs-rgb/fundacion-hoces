@@ -2,10 +2,11 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { DataTable, StatusBadge } from "@/components/admin/DataTable";
 import { DeleteButton } from "@/components/admin/DeleteButton";
-import { deleteNewsPostAction } from "@/lib/actions/news-actions";
+import { ReorderPanel } from "@/components/admin/ReorderPanel";
+import { deleteNewsPostAction, reorderNewsPostsAction } from "@/lib/actions/news-actions";
 
 export default async function AdminNewsPage() {
-  const posts = await prisma.newsPost.findMany({ orderBy: { createdAt: "desc" } });
+  const posts = await prisma.newsPost.findMany({ orderBy: { order: "asc" }, include: { coverImage: true } });
 
   return (
     <div>
@@ -18,6 +19,15 @@ export default async function AdminNewsPage() {
           + Nueva noticia
         </Link>
       </div>
+
+      {posts.length > 1 && (
+        <div className="mt-8">
+          <ReorderPanel
+            items={posts.map((p) => ({ id: p.id, label: p.title, thumbnail: p.coverImage?.path }))}
+            onSave={reorderNewsPostsAction}
+          />
+        </div>
+      )}
 
       <div className="mt-8">
         <DataTable

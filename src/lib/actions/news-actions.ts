@@ -38,7 +38,8 @@ export async function createNewsPostAction(
   }
 
   const publishedAt = parsed.data.status === "PUBLISHED" ? new Date() : null;
-  const post = await prisma.newsPost.create({ data: { ...parsed.data, publishedAt } });
+  const order = await prisma.newsPost.count();
+  const post = await prisma.newsPost.create({ data: { ...parsed.data, publishedAt, order } });
   await logAdminActivity(user.id, "CREATE", "NewsPost", post.id);
 
   revalidatePath("/admin/noticias");
@@ -73,6 +74,17 @@ export async function updateNewsPostAction(
   revalidatePath("/noticias");
   revalidatePath(`/noticias/${parsed.data.slug}`);
   return { ok: true, message: "Publicación actualizada." };
+}
+
+export async function reorderNewsPostsAction(orderedIds: string[]) {
+  const user = await requireAdmin();
+  await prisma.$transaction(
+    orderedIds.map((id, index) => prisma.newsPost.update({ where: { id }, data: { order: index } }))
+  );
+  await logAdminActivity(user.id, "UPDATE", "NewsPost", undefined, { reorder: orderedIds });
+
+  revalidatePath("/admin/noticias");
+  revalidatePath("/noticias");
 }
 
 export async function deleteNewsPostAction(id: string) {

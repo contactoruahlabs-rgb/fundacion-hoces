@@ -223,6 +223,7 @@ model NewsPost {
   author          String    @default("Fundación HOCES")
   coverImageId    String?
   coverImage      Media?    @relation("NewsCover", fields: [coverImageId], references: [id])
+  order           Int       @default(0)
   status          String    @default("DRAFT")
   metaTitle       String    @default("")
   metaDescription String    @default("")
