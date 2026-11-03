@@ -15,6 +15,12 @@ const manrope = Manrope({
   weight: ["400", "500", "700"],
 });
 
+// La conexión pooled a Supabase a veces tarda varios segundos en
+// establecerse (arranque del motor de Prisma en una función fría). El
+// límite por defecto de Vercel puede cortar la petición antes de que
+// la conexión termine de abrirse; este margen evita ese corte.
+export const maxDuration = 30;
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
