@@ -60,10 +60,11 @@ export async function updateAboutContentAction(
     }
   }
 
+  const data = { ...parsed.data, historiaImageId: parsed.data.historiaImageId || null };
   await prisma.aboutContent.upsert({
     where: { id: 1 },
-    create: { id: 1, ...parsed.data },
-    update: parsed.data,
+    create: { id: 1, ...data },
+    update: data,
   });
   await logAdminActivity(user.id, "UPDATE", "AboutContent", "1");
 
@@ -86,6 +87,17 @@ export async function removeAboutGalleryImageAction(galleryImageId: string) {
   const user = await requireAdmin();
   await prisma.aboutGalleryImage.delete({ where: { id: galleryImageId } });
   await logAdminActivity(user.id, "DELETE", "AboutGalleryImage", galleryImageId);
+
+  revalidatePath("/admin/quienes-somos");
+  revalidatePath("/quienes-somos");
+}
+
+export async function updateAboutGalleryImageAction(galleryImageId: string, formData: FormData) {
+  const user = await requireAdmin();
+  const title = String(formData.get("title") ?? "").trim().slice(0, 160);
+  const description = String(formData.get("description") ?? "").trim().slice(0, 500);
+  await prisma.aboutGalleryImage.update({ where: { id: galleryImageId }, data: { title, description } });
+  await logAdminActivity(user.id, "UPDATE", "AboutGalleryImage", galleryImageId);
 
   revalidatePath("/admin/quienes-somos");
   revalidatePath("/quienes-somos");

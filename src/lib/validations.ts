@@ -119,6 +119,7 @@ export const siteSettingSchema = z.object({
 
 export const aboutContentSchema = z.object({
   historia: z.string().trim().max(8000).optional().default(""),
+  historiaImageId: z.string().trim().optional().nullable(),
   mision: z.string().trim().max(4000).optional().default(""),
   vision: z.string().trim().max(4000).optional().default(""),
   proposito: z.string().trim().max(4000).optional().default(""),

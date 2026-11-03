@@ -6,9 +6,10 @@ import { initialActionState } from "@/lib/action-state";
 import { TextArea, FormField } from "@/components/admin/FormField";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { FormStatusBanner } from "@/components/admin/FormStatusBanner";
+import { ImagePicker, type MediaOption } from "@/components/admin/ImagePicker";
 import type { AboutContent } from "@prisma/client";
 
-export function AboutContentForm({ about }: { about: AboutContent }) {
+export function AboutContentForm({ about, mediaOptions }: { about: AboutContent; mediaOptions: MediaOption[] }) {
   const [state, formAction] = useActionState(updateAboutContentAction, initialActionState);
 
   return (
@@ -16,6 +17,12 @@ export function AboutContentForm({ about }: { about: AboutContent }) {
       <FormField label="Historia" name="historia" hint="Deja una línea en blanco entre párrafos." error={state.fieldErrors?.historia}>
         <TextArea id="historia" name="historia" rows={8} defaultValue={about.historia} />
       </FormField>
+      <ImagePicker
+        name="historiaImageId"
+        label="Foto de la sección 'Nuestra historia'"
+        options={mediaOptions}
+        defaultValue={about.historiaImageId}
+      />
       <FormField label="Propósito" name="proposito" error={state.fieldErrors?.proposito}>
         <TextArea id="proposito" name="proposito" rows={6} defaultValue={about.proposito} />
       </FormField>

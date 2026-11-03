@@ -76,13 +76,22 @@ export function NewsPostForm({
         </FormField>
       </div>
 
-      <FormField label="Estado" name="status" error={state.fieldErrors?.status}>
+      <FormField
+        label="Estado"
+        name="status"
+        hint='Mientras esté en "Borrador" no se mostrará en /noticias. Selecciona "Publicado" para que sea visible en el sitio.'
+        error={state.fieldErrors?.status}
+      >
         <Select id="status" name="status" defaultValue={post?.status ?? "DRAFT"}>
-          <option value="DRAFT">Borrador</option>
-          <option value="PUBLISHED">Publicado</option>
+          <option value="DRAFT">Borrador (no visible en el sitio)</option>
+          <option value="PUBLISHED">Publicado (visible en el sitio)</option>
           <option value="ARCHIVED">Archivado</option>
         </Select>
       </FormField>
+      <p className="rounded-lg bg-sage/15 px-3 py-2 text-xs text-forest/80">
+        Recuerda: una noticia solo aparece en la página pública de Noticias cuando su estado es
+        &ldquo;Publicado&rdquo;.
+      </p>
 
       <FormStatusBanner state={state} />
       <SubmitButton>{post ? "Guardar cambios" : "Crear publicación"}</SubmitButton>

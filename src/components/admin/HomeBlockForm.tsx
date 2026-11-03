@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { updateHomeBlockAction } from "@/lib/actions/home-block-actions";
 import { initialActionState } from "@/lib/action-state";
@@ -34,6 +35,16 @@ export function HomeBlockForm({ block, mediaOptions }: { block: HomeBlock; media
         </span>
       </summary>
       <div className="border-t border-border px-6 py-6">
+        {block.type === "MEMORIAS" && (
+          <p className="mb-5 rounded-lg bg-sage/15 px-4 py-3 text-xs text-forest/80">
+            Esto solo edita el texto de la franja de inicio. Para subir o editar memorias, informes y documentos
+            de transparencia, ve a{" "}
+            <Link href="/admin/memorias" className="font-semibold text-olive hover:underline">
+              Memorias y transparencia
+            </Link>
+            .
+          </p>
+        )}
         <form action={formAction} className="space-y-4">
           <input type="hidden" name="type" value={block.type} />
           <Checkbox label="Mostrar esta sección en la página de inicio" name="visible" defaultChecked={block.visible} />

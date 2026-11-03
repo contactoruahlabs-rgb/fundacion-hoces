@@ -42,7 +42,7 @@ export default async function DirectorioPage() {
             {members.map((m) => (
               <div
                 key={m.id}
-                className="rounded-2xl border border-border bg-white p-6 transition-shadow hover:shadow-md"
+                className="flex flex-col items-center rounded-2xl border border-border bg-white p-6 text-center transition-shadow hover:shadow-md"
               >
                 {m.showPhoto && m.photo ? (
                   <div className="relative h-40 w-40 overflow-hidden rounded-full">

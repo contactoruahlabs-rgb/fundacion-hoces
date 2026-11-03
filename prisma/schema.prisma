@@ -89,6 +89,7 @@ model Media {
   testimonialMedia Testimonial[]          @relation("TestimonialMedia")
   homeBlockImages  HomeBlock[]            @relation("HomeBlockImage")
   aboutGallery     AboutGalleryImage[]
+  aboutHistoria    AboutContent[]         @relation("AboutHistoriaImage")
 }
 
 model SiteSetting {
@@ -128,6 +129,8 @@ model SiteSetting {
 model AboutContent {
   id               Int      @id @default(1)
   historia         String   @default("")
+  historiaImageId  String?
+  historiaImage    Media?   @relation("AboutHistoriaImage", fields: [historiaImageId], references: [id])
   mision           String   @default("")
   vision           String   @default("")
   proposito        String   @default("")
@@ -139,10 +142,12 @@ model AboutContent {
 }
 
 model AboutGalleryImage {
-  id      String @id @default(cuid())
-  mediaId String
-  media   Media  @relation(fields: [mediaId], references: [id])
-  order   Int    @default(0)
+  id          String @id @default(cuid())
+  mediaId     String
+  media       Media  @relation(fields: [mediaId], references: [id])
+  title       String @default("")
+  description String @default("")
+  order       Int    @default(0)
 }
 
 model HomeBlock {

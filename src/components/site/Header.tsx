@@ -16,6 +16,7 @@ const NAV_ITEMS: NavItem[] = [
     children: [
       { href: "/equipo", label: "Equipo" },
       { href: "/directorio", label: "Directorio" },
+      { href: "/quienes-somos#hitos", label: "Hitos" },
       { href: "/transparencia", label: "Transparencia" },
     ],
   },
@@ -143,7 +144,7 @@ export function Header({
         <Link
           href="/donaciones"
           onClick={closeMenu}
-          className="flex shrink-0 items-center self-stretch bg-[#eca10c] px-4 text-xs font-bold text-forest transition-colors hover:bg-[#d39209] sm:px-6 sm:text-sm"
+          className="flex shrink-0 items-center self-stretch bg-[#eca10c] px-4 text-xs font-extrabold text-black transition-colors hover:bg-[#d39209] sm:px-6 sm:text-sm"
         >
           Donar
         </Link>
@@ -182,7 +183,7 @@ export function Header({
           <Link
             href="/donaciones"
             onClick={closeMenu}
-            className="mb-2 mt-4 flex items-center justify-center gap-2 rounded-2xl bg-sage px-5 py-4 text-center font-heading text-base font-bold text-forest shadow-sm transition-colors hover:bg-[#95a558]"
+            className="mb-2 mt-4 flex items-center justify-center gap-2 rounded-2xl bg-[#eca10c] px-5 py-4 text-center font-heading text-base font-extrabold text-black shadow-sm transition-colors hover:bg-[#d39209]"
           >
             Donar
           </Link>
@@ -230,6 +231,15 @@ export function Header({
                   }`}
                 >
                   <div className="overflow-hidden">
+                    <Link
+                      href={item.href}
+                      onClick={closeMenu}
+                      className={`block py-3 pl-4 font-subheading text-base font-semibold ${
+                        pathname === item.href ? "text-olive" : "text-forest"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
                     {item.children.map((child) => (
                       <Link
                         key={child.href}

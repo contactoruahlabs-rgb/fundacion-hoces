@@ -8,9 +8,9 @@ export async function getSiteSettings() {
 }
 
 export async function getAboutContent() {
-  const about = await prisma.aboutContent.findUnique({ where: { id: 1 } });
+  const about = await prisma.aboutContent.findUnique({ where: { id: 1 }, include: { historiaImage: true } });
   if (about) return about;
-  return prisma.aboutContent.create({ data: { id: 1 } });
+  return prisma.aboutContent.create({ data: { id: 1 }, include: { historiaImage: true } });
 }
 
 export async function getSiteLogoPath() {

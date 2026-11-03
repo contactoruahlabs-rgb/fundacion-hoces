@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import Image from "next/image";
 import { getAboutContent, getSiteSettings, getAboutGallery } from "@/lib/site-data";
 import { Container } from "@/components/site/Container";
 import { Eyebrow } from "@/components/site/Eyebrow";
@@ -59,7 +60,17 @@ export default async function QuienesSomosPage() {
 
               <div className="relative order-1 mx-auto w-full max-w-xs lg:order-2 lg:max-w-none">
                 <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-forest to-olive">
-                  <OliveBranchOrnament className="h-28 w-28 text-white/25" />
+                  {about.historiaImage ? (
+                    <Image
+                      src={about.historiaImage.path}
+                      alt={about.historiaImage.altText || "Nuestra historia"}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 1024px) 90vw, 500px"
+                    />
+                  ) : (
+                    <OliveBranchOrnament className="h-28 w-28 text-white/25" />
+                  )}
                 </div>
                 <blockquote className="relative mx-6 -mt-14 rounded-2xl bg-white p-6 shadow-xl sm:-mt-16 sm:ml-auto sm:mr-[-1.5rem] sm:max-w-xs">
                   <p className="text-sm italic leading-relaxed text-forest/85">
@@ -119,19 +130,29 @@ export default async function QuienesSomosPage() {
         </section>
       )}
 
-      {hitos.length > 0 && (
-        <section className="mt-12">
+      {(hitos.length > 0 || gallery.length > 0) && (
+        <section id="hitos" className="mt-12 scroll-mt-24">
           <Container className="max-w-3xl">
             <h2 className="font-heading text-2xl font-bold text-forest">Hitos</h2>
-            <ol className="mt-6 space-y-4 border-l-2 border-sage pl-5">
-              {hitos.map((h) => (
-                <li key={h.anio + h.texto}>
-                  <p className="font-subheading text-olive">{h.anio}</p>
-                  <p className="text-sm text-forest/80">{h.texto}</p>
-                </li>
-              ))}
-            </ol>
-            <HitosGallery images={gallery.map((g) => ({ id: g.id, path: g.media.path, altText: g.media.altText }))} />
+            {hitos.length > 0 && (
+              <ol className="mt-6 space-y-4 border-l-2 border-sage pl-5">
+                {hitos.map((h) => (
+                  <li key={h.anio + h.texto}>
+                    <p className="font-subheading text-olive">{h.anio}</p>
+                    <p className="text-sm text-forest/80">{h.texto}</p>
+                  </li>
+                ))}
+              </ol>
+            )}
+            <HitosGallery
+              images={gallery.map((g) => ({
+                id: g.id,
+                path: g.media.path,
+                altText: g.media.altText,
+                title: g.title,
+                description: g.description,
+              }))}
+            />
           </Container>
         </section>
       )}

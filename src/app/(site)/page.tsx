@@ -80,7 +80,7 @@ export default async function HomePage() {
                   >
                     Conocer nuestros servicios
                   </ButtonLink>
-                  <ButtonLink href="/donaciones" className="w-full justify-center !bg-pink-500 !text-white hover:!bg-pink-600 sm:w-auto">
+                  <ButtonLink href="/donaciones" className="w-full justify-center !bg-[#eca10c] !font-extrabold !text-black hover:!bg-[#d39209] sm:w-auto">
                     Donar <span aria-hidden="true" className="text-red-600">❤️</span>
                   </ButtonLink>
                 </div>
@@ -105,7 +105,7 @@ export default async function HomePage() {
                   <ButtonLink href="/servicios" variant="ghost" className="w-full justify-center sm:w-auto">
                     Conocer nuestros servicios
                   </ButtonLink>
-                  <ButtonLink href="/donaciones" className="w-full justify-center !bg-pink-500 !text-white hover:!bg-pink-600 sm:w-auto">
+                  <ButtonLink href="/donaciones" className="w-full justify-center !bg-[#eca10c] !font-extrabold !text-black hover:!bg-[#d39209] sm:w-auto">
                     Donar <span aria-hidden="true" className="text-red-600">❤️</span>
                   </ButtonLink>
                 </div>
