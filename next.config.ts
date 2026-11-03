@@ -7,7 +7,11 @@ const isDev = process.env.NODE_ENV !== "production";
 // así que esta directiva queda fuera del build de producción.
 const scriptSrc = isDev ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self' 'unsafe-inline'";
 // En desarrollo, Turbopack usa un WebSocket (HMR) hacia el propio origen.
-const connectSrc = isDev ? "connect-src 'self' ws: wss:" : "connect-src 'self'";
+// https://*.supabase.co: el navegador sube imágenes directo a Supabase
+// Storage (ver MediaUploadForm), sin pasar por nuestro servidor.
+const connectSrc = isDev
+  ? "connect-src 'self' ws: wss: https://*.supabase.co"
+  : "connect-src 'self' https://*.supabase.co";
 
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
