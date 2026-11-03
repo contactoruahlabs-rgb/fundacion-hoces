@@ -3,53 +3,50 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin, logAdminActivity } from "@/lib/auth";
-import { saveImageUpload, deleteUpload, UploadValidationError } from "@/lib/storage";
-import type { ActionState } from "@/lib/action-state";
+import { createImageUploadTicket, deleteUpload, UploadValidationError } from "@/lib/storage";
 
-export async function uploadImageAction(
-  _prev: ActionState,
-  formData: FormData
-): Promise<ActionState> {
-  const user = await requireAdmin();
-  const file = formData.get("file");
-  const altText = String(formData.get("altText") ?? "").trim();
-  const description = String(formData.get("description") ?? "").trim();
-
-  if (!(file instanceof File) || file.size === 0) {
-    return { ok: false, message: "Selecciona una imagen para subir." };
-  }
-  if (!altText) {
-    return {
-      ok: false,
-      message: "El texto alternativo es obligatorio (accesibilidad).",
-      fieldErrors: { altText: "Describe brevemente la imagen" },
-    };
-  }
-
+export async function createMediaUploadTicketAction(mimeType: string, size: number) {
+  await requireAdmin();
   try {
-    const saved = await saveImageUpload(file);
-    const media = await prisma.media.create({
-      data: {
-        filename: saved.filename,
-        path: saved.path,
-        altText,
-        description,
-        mimeType: saved.mimeType,
-        size: saved.size,
-        width: saved.width,
-        height: saved.height,
-      },
-    });
-    await logAdminActivity(user.id, "UPLOAD", "Media", media.id, { filename: saved.filename });
+    const ticket = await createImageUploadTicket(mimeType, size);
+    return { ok: true as const, ticket };
   } catch (err) {
     if (err instanceof UploadValidationError) {
-      return { ok: false, message: err.message };
+      return { ok: false as const, message: err.message };
     }
-    return { ok: false, message: "No se pudo subir la imagen. Intenta nuevamente." };
+    return { ok: false as const, message: "No se pudo preparar la subida. Intenta nuevamente." };
+  }
+}
+
+export async function confirmMediaUploadAction(input: {
+  path: string;
+  filename: string;
+  publicUrl: string;
+  mimeType: string;
+  size: number;
+  altText: string;
+  description: string;
+}) {
+  const user = await requireAdmin();
+  const altText = input.altText.trim();
+  if (!altText) {
+    return { ok: false as const, message: "El texto alternativo es obligatorio (accesibilidad)." };
   }
 
+  const media = await prisma.media.create({
+    data: {
+      filename: input.filename,
+      path: input.publicUrl,
+      altText,
+      description: input.description.trim(),
+      mimeType: input.mimeType,
+      size: input.size,
+    },
+  });
+  await logAdminActivity(user.id, "UPLOAD", "Media", media.id, { filename: input.filename });
+
   revalidatePath("/admin/medios");
-  return { ok: true, message: "Imagen subida correctamente." };
+  return { ok: true as const, message: "Imagen subida correctamente." };
 }
 
 export async function deleteMediaAction(mediaId: string) {

@@ -113,6 +113,45 @@ export async function saveDocumentUpload(file: File) {
   };
 }
 
+const ALLOWED_IMAGE_MIME_TO_EXT: Record<string, string> = {
+  "image/png": ".png",
+  "image/jpeg": ".jpg",
+  "image/webp": ".webp",
+  "image/avif": ".avif",
+};
+
+// Vercel limita a ~4.5MB el cuerpo de una función serverless, por debajo del
+// límite de 8MB que la app permite para imágenes. Para fotos reales de
+// celular (frecuentemente >4.5MB) el archivo nunca pasa por nuestro
+// servidor: el navegador sube directo a Supabase Storage con una URL
+// firmada, y solo los metadatos (ya subido el archivo) llegan por la acción
+// del servidor.
+export async function createImageUploadTicket(mimeType: string, size: number) {
+  const ext = ALLOWED_IMAGE_MIME_TO_EXT[mimeType];
+  if (!ext) {
+    throw new UploadValidationError(
+      "El archivo no es una imagen válida (se aceptan PNG, JPG, WEBP o AVIF)."
+    );
+  }
+  if (size <= 0) throw new UploadValidationError("El archivo está vacío.");
+  if (size > MAX_IMAGE_BYTES) {
+    throw new UploadValidationError("La imagen supera el tamaño máximo permitido (8MB).");
+  }
+
+  const key = `images/${randomUUID()}${ext}`;
+  const supabase = getClient();
+  const { data, error } = await supabase.storage.from(SUPABASE_BUCKET).createSignedUploadUrl(key);
+  if (error) throw new Error(`No se pudo preparar la subida: ${error.message}`);
+
+  const publicUrl = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(key).data.publicUrl;
+  return {
+    path: key,
+    filename: key.split("/").pop()!,
+    signedUrl: data.signedUrl,
+    publicUrl,
+  };
+}
+
 export async function deleteUpload(publicUrl: string) {
   const marker = `/storage/v1/object/public/${SUPABASE_BUCKET}/`;
   const idx = publicUrl.indexOf(marker);
