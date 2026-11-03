@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTransition } from "react";
 import type { MediaOption } from "@/components/admin/ImagePicker";
+import { ReorderPanel } from "@/components/admin/ReorderPanel";
 
 type HitoItem = {
   id: string;
@@ -19,12 +20,14 @@ export function HitosGalleryManager({
   onAdd,
   onRemove,
   onUpdate,
+  onReorder,
 }: {
   gallery: HitoItem[];
   mediaOptions: MediaOption[];
   onAdd: (mediaId: string) => Promise<void>;
   onRemove: (galleryImageId: string) => Promise<void>;
   onUpdate: (galleryImageId: string, formData: FormData) => Promise<void>;
+  onReorder: (orderedIds: string[]) => Promise<void>;
 }) {
   const [isPending, startTransition] = useTransition();
   const usedIds = new Set(gallery.map((g) => g.mediaId));
@@ -32,6 +35,12 @@ export function HitosGalleryManager({
 
   return (
     <div className="space-y-5">
+      {gallery.length > 1 && (
+        <ReorderPanel
+          items={gallery.map((g) => ({ id: g.id, label: g.title || "Sin nombre", thumbnail: g.media.path }))}
+          onSave={onReorder}
+        />
+      )}
       {gallery.length > 0 && (
         <div className="space-y-4">
           {gallery.map((item) => (

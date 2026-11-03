@@ -49,6 +49,17 @@ export async function updateFaqAction(
   return { ok: true, message: "Pregunta actualizada." };
 }
 
+export async function reorderFaqAction(orderedIds: string[]) {
+  const user = await requireAdmin();
+  await prisma.$transaction(
+    orderedIds.map((id, index) => prisma.faqItem.update({ where: { id }, data: { order: index } }))
+  );
+  await logAdminActivity(user.id, "UPDATE", "FaqItem", undefined, { reorder: orderedIds });
+
+  revalidatePath("/admin/preguntas-frecuentes");
+  revalidatePath("/preguntas-frecuentes");
+}
+
 export async function deleteFaqAction(id: string) {
   const user = await requireAdmin();
   await prisma.faqItem.delete({ where: { id } });

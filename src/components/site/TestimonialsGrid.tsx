@@ -12,6 +12,7 @@ type TestimonialItem = {
 
 export function TestimonialsGrid({ testimonials }: { testimonials: TestimonialItem[] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (openIndex === null) return;
@@ -20,11 +21,19 @@ export function TestimonialsGrid({ testimonials }: { testimonials: TestimonialIt
     };
     window.addEventListener("keydown", onKey);
     document.documentElement.style.overflow = "hidden";
+    const raf = requestAnimationFrame(() => setVisible(true));
     return () => {
       window.removeEventListener("keydown", onKey);
       document.documentElement.style.overflow = "";
+      cancelAnimationFrame(raf);
+      setVisible(false);
     };
   }, [openIndex]);
+
+  function close() {
+    setVisible(false);
+    setTimeout(() => setOpenIndex(null), 200);
+  }
 
   const current = openIndex !== null ? testimonials[openIndex] : null;
 
@@ -69,36 +78,56 @@ export function TestimonialsGrid({ testimonials }: { testimonials: TestimonialIt
 
       {current && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-forest/95 p-4 sm:p-8"
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-forest/50 p-4 backdrop-blur-sm transition-opacity duration-200 sm:p-8 ${
+            visible ? "opacity-100" : "opacity-0"
+          }`}
           role="dialog"
           aria-modal="true"
-          onClick={() => setOpenIndex(null)}
+          onClick={close}
         >
-          <button
-            type="button"
-            aria-label="Cerrar"
-            onClick={() => setOpenIndex(null)}
-            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </button>
-
           <div
-            className="relative flex w-full max-w-xl flex-col items-center overflow-hidden rounded-2xl bg-white p-6 sm:p-8"
+            className={`relative flex w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl transition-all duration-200 ${
+              visible ? "translate-y-0 scale-100 opacity-100" : "translate-y-3 scale-95 opacity-0"
+            }`}
+            style={{ maxHeight: "85vh" }}
             onClick={(e) => e.stopPropagation()}
           >
-            {current.media && (
-              <div className="relative mb-5 h-28 w-28 shrink-0 overflow-hidden rounded-full">
-                <Image src={current.media.path} alt={current.media.altText || current.authorLabel} fill className="object-cover" sizes="112px" />
+            <button
+              type="button"
+              aria-label="Cerrar"
+              onClick={close}
+              className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-forest/40 text-white backdrop-blur-sm hover:bg-forest/60"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+
+            <div className="overflow-y-auto overscroll-contain">
+              {current.media ? (
+                <div className="relative h-56 w-full shrink-0 sm:h-64">
+                  <Image
+                    src={current.media.path}
+                    alt={current.media.altText || current.authorLabel}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 100vw, 576px"
+                  />
+                </div>
+              ) : (
+                <div className="flex h-32 w-full items-center justify-center bg-sage/15">
+                  <span className="font-heading text-5xl text-sage/50" aria-hidden="true">
+                    “
+                  </span>
+                </div>
+              )}
+              <div className="p-6 text-center sm:p-8">
+                <h3 className="font-subheading text-lg text-forest">{current.authorLabel}</h3>
+                <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-forest/80 sm:text-base">
+                  {current.content}
+                </p>
               </div>
-            )}
-            <span className="font-heading text-5xl text-sage/40" aria-hidden="true">
-              “
-            </span>
-            <p className="mt-2 text-center text-forest/80">{current.content}</p>
-            <footer className="mt-4 text-sm font-subheading text-olive">— {current.authorLabel}</footer>
+            </div>
           </div>
         </div>
       )}

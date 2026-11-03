@@ -92,6 +92,17 @@ export async function removeAboutGalleryImageAction(galleryImageId: string) {
   revalidatePath("/quienes-somos");
 }
 
+export async function reorderAboutGalleryAction(orderedIds: string[]) {
+  const user = await requireAdmin();
+  await prisma.$transaction(
+    orderedIds.map((id, index) => prisma.aboutGalleryImage.update({ where: { id }, data: { order: index } }))
+  );
+  await logAdminActivity(user.id, "UPDATE", "AboutGalleryImage", undefined, { reorder: orderedIds });
+
+  revalidatePath("/admin/quienes-somos");
+  revalidatePath("/quienes-somos");
+}
+
 export async function updateAboutGalleryImageAction(galleryImageId: string, formData: FormData) {
   const user = await requireAdmin();
   const title = String(formData.get("title") ?? "").trim().slice(0, 160);

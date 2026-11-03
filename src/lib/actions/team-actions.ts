@@ -62,6 +62,18 @@ export async function updateTeamMemberAction(
   return { ok: true, message: "Profesional actualizado." };
 }
 
+export async function reorderTeamMembersAction(orderedIds: string[]) {
+  const user = await requireAdmin();
+  await prisma.$transaction(
+    orderedIds.map((id, index) => prisma.teamMember.update({ where: { id }, data: { order: index } }))
+  );
+  await logAdminActivity(user.id, "UPDATE", "TeamMember", undefined, { reorder: orderedIds });
+
+  revalidatePath("/admin/equipo");
+  revalidatePath("/equipo");
+  revalidatePath("/directorio");
+}
+
 export async function deleteTeamMemberAction(id: string) {
   const user = await requireAdmin();
   await prisma.teamMember.delete({ where: { id } });

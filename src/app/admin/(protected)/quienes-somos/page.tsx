@@ -6,6 +6,7 @@ import {
   addAboutGalleryImageAction,
   removeAboutGalleryImageAction,
   updateAboutGalleryImageAction,
+  reorderAboutGalleryAction,
 } from "@/lib/actions/settings-actions";
 
 export default async function AdminAboutPage() {
@@ -37,6 +38,7 @@ export default async function AdminAboutPage() {
             onAdd={addAboutGalleryImageAction}
             onRemove={removeAboutGalleryImageAction}
             onUpdate={updateAboutGalleryImageAction}
+            onReorder={reorderAboutGalleryAction}
           />
         </div>
       </div>

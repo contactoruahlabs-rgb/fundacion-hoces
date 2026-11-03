@@ -82,6 +82,17 @@ export async function updateProgramAction(
   return { ok: true, message: "Servicio actualizado." };
 }
 
+export async function reorderProgramsAction(orderedIds: string[]) {
+  const user = await requireAdmin();
+  await prisma.$transaction(
+    orderedIds.map((id, index) => prisma.program.update({ where: { id }, data: { order: index } }))
+  );
+  await logAdminActivity(user.id, "UPDATE", "Program", undefined, { reorder: orderedIds });
+
+  revalidatePath("/admin/servicios");
+  revalidatePath("/servicios");
+}
+
 export async function deleteProgramAction(id: string) {
   const user = await requireAdmin();
   await prisma.program.delete({ where: { id } });

@@ -97,6 +97,17 @@ export async function updateDocumentAction(
   return { ok: true, message: "Documento actualizado." };
 }
 
+export async function reorderDocumentsAction(orderedIds: string[]) {
+  const user = await requireAdmin();
+  await prisma.$transaction(
+    orderedIds.map((id, index) => prisma.document.update({ where: { id }, data: { order: index } }))
+  );
+  await logAdminActivity(user.id, "UPDATE", "Document", undefined, { reorder: orderedIds });
+
+  revalidatePath("/admin/memorias");
+  revalidatePath("/transparencia");
+}
+
 export async function deleteDocumentAction(id: string) {
   const user = await requireAdmin();
   const doc = await prisma.document.findUnique({ where: { id } });

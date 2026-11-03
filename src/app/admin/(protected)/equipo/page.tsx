@@ -2,10 +2,13 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { DataTable, StatusBadge } from "@/components/admin/DataTable";
 import { DeleteButton } from "@/components/admin/DeleteButton";
-import { deleteTeamMemberAction } from "@/lib/actions/team-actions";
+import { ReorderPanel } from "@/components/admin/ReorderPanel";
+import { deleteTeamMemberAction, reorderTeamMembersAction } from "@/lib/actions/team-actions";
 
 export default async function AdminTeamPage() {
-  const members = await prisma.teamMember.findMany({ orderBy: { order: "asc" } });
+  const members = await prisma.teamMember.findMany({ orderBy: { order: "asc" }, include: { photo: true } });
+  const equipo = members.filter((m) => m.group === "EQUIPO");
+  const directorio = members.filter((m) => m.group === "DIRECTORIO");
 
   return (
     <div>
@@ -17,6 +20,23 @@ export default async function AdminTeamPage() {
         <Link href="/admin/equipo/nuevo" className="rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-white">
           + Agregar profesional
         </Link>
+      </div>
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        {equipo.length > 1 && (
+          <ReorderPanel
+            title="Orden — Equipo"
+            items={equipo.map((m) => ({ id: m.id, label: m.name, sublabel: m.role, thumbnail: m.photo?.path }))}
+            onSave={reorderTeamMembersAction}
+          />
+        )}
+        {directorio.length > 1 && (
+          <ReorderPanel
+            title="Orden — Directorio"
+            items={directorio.map((m) => ({ id: m.id, label: m.name, sublabel: m.role, thumbnail: m.photo?.path }))}
+            onSave={reorderTeamMembersAction}
+          />
+        )}
       </div>
 
       <div className="mt-8">

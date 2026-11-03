@@ -2,7 +2,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { DataTable, StatusBadge } from "@/components/admin/DataTable";
 import { DeleteButton } from "@/components/admin/DeleteButton";
-import { deleteFaqAction } from "@/lib/actions/faq-actions";
+import { ReorderPanel } from "@/components/admin/ReorderPanel";
+import { deleteFaqAction, reorderFaqAction } from "@/lib/actions/faq-actions";
 
 export default async function AdminFaqPage() {
   const faqs = await prisma.faqItem.findMany({ orderBy: { order: "asc" } });
@@ -18,6 +19,12 @@ export default async function AdminFaqPage() {
           + Nueva pregunta
         </Link>
       </div>
+
+      {faqs.length > 1 && (
+        <div className="mt-8">
+          <ReorderPanel items={faqs.map((f) => ({ id: f.id, label: f.question }))} onSave={reorderFaqAction} />
+        </div>
+      )}
 
       <div className="mt-8">
         <DataTable

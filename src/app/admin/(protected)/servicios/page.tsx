@@ -2,10 +2,11 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { DataTable, StatusBadge } from "@/components/admin/DataTable";
 import { DeleteButton } from "@/components/admin/DeleteButton";
-import { deleteProgramAction } from "@/lib/actions/program-actions";
+import { ReorderPanel } from "@/components/admin/ReorderPanel";
+import { deleteProgramAction, reorderProgramsAction } from "@/lib/actions/program-actions";
 
 export default async function AdminProgramsPage() {
-  const programs = await prisma.program.findMany({ orderBy: { order: "asc" } });
+  const programs = await prisma.program.findMany({ orderBy: { order: "asc" }, include: { coverImage: true } });
 
   return (
     <div>
@@ -18,6 +19,15 @@ export default async function AdminProgramsPage() {
           + Nuevo servicio
         </Link>
       </div>
+
+      {programs.length > 1 && (
+        <div className="mt-8">
+          <ReorderPanel
+            items={programs.map((p) => ({ id: p.id, label: p.name, thumbnail: p.coverImage?.path }))}
+            onSave={reorderProgramsAction}
+          />
+        </div>
+      )}
 
       <div className="mt-8">
         <DataTable

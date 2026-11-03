@@ -67,6 +67,17 @@ export async function updateTestimonialAction(
   return { ok: true, message: "Testimonio actualizado." };
 }
 
+export async function reorderTestimonialsAction(orderedIds: string[]) {
+  const user = await requireAdmin();
+  await prisma.$transaction(
+    orderedIds.map((id, index) => prisma.testimonial.update({ where: { id }, data: { order: index } }))
+  );
+  await logAdminActivity(user.id, "UPDATE", "Testimonial", undefined, { reorder: orderedIds });
+
+  revalidatePath("/admin/testimonios");
+  revalidatePath("/testimonios");
+}
+
 export async function deleteTestimonialAction(id: string) {
   const user = await requireAdmin();
   await prisma.testimonial.delete({ where: { id } });

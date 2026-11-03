@@ -39,18 +39,18 @@ export default async function EquipoPage() {
             />
           </div>
         ) : (
-          <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-12 grid grid-cols-2 gap-3 sm:gap-8 lg:grid-cols-3">
             {members.map((m) => (
               <div
                 key={m.id}
-                className="rounded-2xl border border-border bg-white p-6 transition-shadow hover:shadow-md"
+                className="flex flex-col items-center rounded-2xl border border-border bg-white p-3 text-center transition-shadow hover:shadow-md sm:items-start sm:p-6 sm:text-left"
               >
                 {m.showPhoto && m.photo ? (
-                  <div className="relative h-40 w-40 overflow-hidden rounded-full">
-                    <Image src={m.photo.path} alt={m.photo.altText || m.name} fill className="object-cover" sizes="160px" />
+                  <div className="relative h-20 w-20 overflow-hidden rounded-full sm:h-40 sm:w-40">
+                    <Image src={m.photo.path} alt={m.photo.altText || m.name} fill className="object-cover" sizes="(max-width: 640px) 80px, 160px" />
                   </div>
                 ) : (
-                  <div className="flex h-40 w-40 items-center justify-center rounded-full bg-sage/20 font-heading text-3xl text-olive">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-sage/20 font-heading text-xl text-olive sm:h-40 sm:w-40 sm:text-3xl">
                     {m.name
                       .split(" ")
                       .map((n) => n[0])
@@ -58,12 +58,12 @@ export default async function EquipoPage() {
                       .join("")}
                   </div>
                 )}
-                <h2 className="mt-5 font-subheading text-lg text-forest">{m.name}</h2>
-                <p className="text-sm font-medium text-olive">{m.role}</p>
+                <h2 className="mt-3 font-subheading text-sm text-forest sm:mt-5 sm:text-lg">{m.name}</h2>
+                <p className="text-xs font-medium text-olive sm:text-sm">{m.role}</p>
                 {m.experienceYears != null && (
-                  <p className="mt-1 text-xs text-forest/60">{m.experienceYears} años de experiencia</p>
+                  <p className="mt-1 text-[11px] text-forest/60 sm:text-xs">{m.experienceYears} años de experiencia</p>
                 )}
-                {m.bio && <p className="mt-3 text-sm text-forest/80">{m.bio}</p>}
+                {m.bio && <p className="mt-3 hidden text-sm text-forest/80 sm:block">{m.bio}</p>}
               </div>
             ))}
           </div>

@@ -2,10 +2,11 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { DataTable, StatusBadge } from "@/components/admin/DataTable";
 import { DeleteButton } from "@/components/admin/DeleteButton";
-import { deleteTestimonialAction } from "@/lib/actions/testimonial-actions";
+import { ReorderPanel } from "@/components/admin/ReorderPanel";
+import { deleteTestimonialAction, reorderTestimonialsAction } from "@/lib/actions/testimonial-actions";
 
 export default async function AdminTestimonialsPage() {
-  const testimonials = await prisma.testimonial.findMany({ orderBy: { order: "asc" } });
+  const testimonials = await prisma.testimonial.findMany({ orderBy: { order: "asc" }, include: { media: true } });
 
   return (
     <div>
@@ -20,6 +21,15 @@ export default async function AdminTestimonialsPage() {
           + Nuevo testimonio
         </Link>
       </div>
+
+      {testimonials.length > 1 && (
+        <div className="mt-8">
+          <ReorderPanel
+            items={testimonials.map((t) => ({ id: t.id, label: t.authorLabel, thumbnail: t.media?.path }))}
+            onSave={reorderTestimonialsAction}
+          />
+        </div>
+      )}
 
       <div className="mt-8">
         <DataTable

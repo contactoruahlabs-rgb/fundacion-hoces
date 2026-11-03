@@ -2,7 +2,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { DataTable, StatusBadge } from "@/components/admin/DataTable";
 import { DeleteButton } from "@/components/admin/DeleteButton";
-import { deleteDocumentAction } from "@/lib/actions/document-actions";
+import { ReorderPanel } from "@/components/admin/ReorderPanel";
+import { deleteDocumentAction, reorderDocumentsAction } from "@/lib/actions/document-actions";
 
 const CATEGORY_LABELS: Record<string, string> = {
   MEMORIA_ANUAL: "Memoria anual",
@@ -13,6 +14,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export default async function AdminDocumentsPage() {
   const documents = await prisma.document.findMany({ orderBy: [{ year: "desc" }, { order: "asc" }] });
+  const years = [...new Set(documents.map((d) => d.year))];
 
   return (
     <div>
@@ -25,6 +27,23 @@ export default async function AdminDocumentsPage() {
           + Nuevo documento
         </Link>
       </div>
+
+      {years.some((y) => documents.filter((d) => d.year === y).length > 1) && (
+        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          {years.map((year) => {
+            const docsOfYear = documents.filter((d) => d.year === year);
+            if (docsOfYear.length < 2) return null;
+            return (
+              <ReorderPanel
+                key={year}
+                title={`Orden — ${year}`}
+                items={docsOfYear.map((d) => ({ id: d.id, label: d.title, sublabel: CATEGORY_LABELS[d.category] }))}
+                onSave={reorderDocumentsAction}
+              />
+            );
+          })}
+        </div>
+      )}
 
       <div className="mt-8">
         <DataTable
