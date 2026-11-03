@@ -13,7 +13,8 @@
 //   PaymentGateway   -> TRANSBANK | MERCADOPAGO
 //   DonationStatus   -> PENDING | APPROVED | REJECTED | CANCELLED
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
