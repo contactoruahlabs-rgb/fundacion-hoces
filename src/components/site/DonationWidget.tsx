@@ -31,6 +31,7 @@ export function DonationWidget({
   const [selected, setSelected] = useState<number | null>(null);
   const [custom, setCustom] = useState("");
   const [mensual, setMensual] = useState(false);
+  const [anonimo, setAnonimo] = useState(false);
   const [dedication, setDedication] = useState("");
   const [method, setMethod] = useState<Method>("transferencia");
   const [acceptComms, setAcceptComms] = useState(false);
@@ -46,21 +47,12 @@ export function DonationWidget({
 
   const emailMismatch = email.length > 0 && confirmEmail.length > 0 && email !== confirmEmail;
   const selectedMethod = METHODS.find((m) => m.id === method)!;
-  const missingRequired = !nombre || !apellidos || !telefono || !email || !confirmEmail || !amount || !acceptTerms;
+  const missingRequired =
+    (!anonimo && (!nombre || !apellidos)) || !telefono || !email || !confirmEmail || !amount || !acceptTerms;
   const canSubmit = !missingRequired && !emailMismatch && selectedMethod.active;
 
   const digits = whatsapp.replace(/\D/g, "");
-  const waText = [
-    "Hola, quiero donar a Fundación HOCES.",
-    `Nombre: ${nombre} ${apellidos}.`,
-    `Teléfono: +56 ${telefono}.`,
-    `Correo: ${email}.`,
-    amount ? `Monto: ${formatCLP(amount)} (${mensual ? "donación mensual" : "donación única"}).` : "",
-    dedication ? `Quiero dedicar esta donación a: ${dedication}.` : "",
-    `Acepta recibir comunicaciones: ${acceptComms ? "Sí" : "No"}.`,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const waText = "Hola, quiero ayudar a la fundación haciendo una donación, ¿Me darían los datos bancarios para transferir?";
   const waHref = `https://wa.me/${digits}?text=${encodeURIComponent(waText)}`;
 
   async function handleWebpaySubmit() {
@@ -69,7 +61,7 @@ export function DonationWidget({
     setWebpaySubmitting(true);
     const result = await createTransbankDonationAction({
       amount,
-      donorName: `${nombre} ${apellidos}`,
+      donorName: anonimo ? "Donante anónimo" : `${nombre} ${apellidos}`,
       donorEmail: email,
     });
     if (!result.ok) {
@@ -170,36 +162,50 @@ export function DonationWidget({
             </div>
           </div>
 
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <div>
-              <label htmlFor="nombre" className="text-xs font-semibold uppercase tracking-wide text-forest/70">
-                Nombre *
-              </label>
+          <div className="mt-3">
+            <label className="flex items-start gap-2.5 text-sm text-forest/80">
               <input
-                id="nombre"
-                type="text"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                placeholder="Juan"
-                className="mt-1 w-full rounded-lg border border-border bg-white px-3.5 py-2 text-sm text-forest outline-none focus:border-olive focus:ring-2 focus:ring-olive/30"
+                type="checkbox"
+                checked={anonimo}
+                onChange={(e) => setAnonimo(e.target.checked)}
+                className="mt-0.5 accent-olive"
               />
-              {triedSubmit && !nombre && <p className="mt-1 text-xs text-red-600">Ingresa tu nombre.</p>}
-            </div>
-            <div>
-              <label htmlFor="apellidos" className="text-xs font-semibold uppercase tracking-wide text-forest/70">
-                Apellidos *
-              </label>
-              <input
-                id="apellidos"
-                type="text"
-                value={apellidos}
-                onChange={(e) => setApellidos(e.target.value)}
-                placeholder="Pérez"
-                className="mt-1 w-full rounded-lg border border-border bg-white px-3.5 py-2 text-sm text-forest outline-none focus:border-olive focus:ring-2 focus:ring-olive/30"
-              />
-              {triedSubmit && !apellidos && <p className="mt-1 text-xs text-red-600">Ingresa tus apellidos.</p>}
-            </div>
+              Donación anónima (no registramos tu nombre)
+            </label>
           </div>
+
+          {!anonimo && (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor="nombre" className="text-xs font-semibold uppercase tracking-wide text-forest/70">
+                  Nombre *
+                </label>
+                <input
+                  id="nombre"
+                  type="text"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  placeholder="Juan"
+                  className="mt-1 w-full rounded-lg border border-border bg-white px-3.5 py-2 text-sm text-forest outline-none focus:border-olive focus:ring-2 focus:ring-olive/30"
+                />
+                {triedSubmit && !nombre && <p className="mt-1 text-xs text-red-600">Ingresa tu nombre.</p>}
+              </div>
+              <div>
+                <label htmlFor="apellidos" className="text-xs font-semibold uppercase tracking-wide text-forest/70">
+                  Apellidos *
+                </label>
+                <input
+                  id="apellidos"
+                  type="text"
+                  value={apellidos}
+                  onChange={(e) => setApellidos(e.target.value)}
+                  placeholder="Pérez"
+                  className="mt-1 w-full rounded-lg border border-border bg-white px-3.5 py-2 text-sm text-forest outline-none focus:border-olive focus:ring-2 focus:ring-olive/30"
+                />
+                {triedSubmit && !apellidos && <p className="mt-1 text-xs text-red-600">Ingresa tus apellidos.</p>}
+              </div>
+            </div>
+          )}
 
           <div className="mt-3">
             <label htmlFor="telefono" className="text-xs font-semibold uppercase tracking-wide text-forest/70">
