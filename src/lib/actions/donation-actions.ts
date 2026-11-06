@@ -4,7 +4,7 @@ import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { createTransbankTransaction, commitTransbankTransaction } from "@/lib/payments/transbank";
 
-const MIN_AMOUNT_CLP = 1000;
+const MIN_AMOUNT_CLP = 50;
 const MAX_AMOUNT_CLP = 5_000_000;
 
 type StartResult = { ok: true; url: string; token: string } | { ok: false; message: string };
