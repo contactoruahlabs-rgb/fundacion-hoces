@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { Container } from "@/components/site/Container";
 import { EmptyState } from "@/components/site/EmptyState";
 import { Eyebrow } from "@/components/site/Eyebrow";
-import { StoryCard } from "@/components/site/StoryCard";
+import { NewsGrid } from "@/components/site/NewsGrid";
+import { richTextToHtml } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Noticias",
@@ -36,19 +37,19 @@ export default async function NoticiasPage() {
             />
           </div>
         ) : (
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {posts.map((post) => (
-              <StoryCard
-                key={post.id}
-                slug={post.slug}
-                title={post.title}
-                subtitle={post.subtitle}
-                category={post.category}
-                coverImage={post.coverImage}
-                publishedAt={post.publishedAt}
-              />
-            ))}
-          </div>
+          <NewsGrid
+            posts={posts.map((post) => ({
+              id: post.id,
+              slug: post.slug,
+              title: post.title,
+              subtitle: post.subtitle,
+              category: post.category,
+              author: post.author,
+              coverImage: post.coverImage,
+              publishedAt: post.publishedAt ? post.publishedAt.toISOString() : null,
+              bodyHtml: richTextToHtml(post.body),
+            }))}
+          />
         )}
       </Container>
     </div>

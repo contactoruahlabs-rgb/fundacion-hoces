@@ -13,6 +13,7 @@ export async function createTransbankDonationAction(input: {
   amount: number;
   donorName: string;
   donorEmail: string;
+  dedication?: string;
 }): Promise<StartResult> {
   const amount = Math.trunc(input.amount);
   if (!Number.isFinite(amount) || amount < MIN_AMOUNT_CLP || amount > MAX_AMOUNT_CLP) {
@@ -32,8 +33,10 @@ export async function createTransbankDonationAction(input: {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const returnUrl = `${siteUrl}/donaciones/retorno`;
 
+  const dedication = (input.dedication ?? "").trim().slice(0, 120);
+
   const donation = await prisma.donation.create({
-    data: { amount, gateway: "TRANSBANK", status: "PENDING", donorName, donorEmail, buyOrder },
+    data: { amount, gateway: "TRANSBANK", status: "PENDING", donorName, donorEmail, dedication, buyOrder },
   });
 
   try {

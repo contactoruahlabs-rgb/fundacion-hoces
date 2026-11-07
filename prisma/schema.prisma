@@ -309,6 +309,7 @@ model Donation {
   status      String    @default("PENDING")
   donorName   String    @default("")
   donorEmail  String    @default("")
+  dedication  String    @default("")
   errorLog    String    @default("")
   createdAt   DateTime  @default(now())
   confirmedAt DateTime?

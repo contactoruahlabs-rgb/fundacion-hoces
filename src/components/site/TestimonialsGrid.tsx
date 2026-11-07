@@ -105,12 +105,12 @@ export function TestimonialsGrid({ testimonials }: { testimonials: TestimonialIt
 
             <div className="overflow-y-auto overscroll-contain">
               {current.media ? (
-                <div className="relative h-56 w-full shrink-0 sm:h-64">
+                <div className="relative h-56 w-full shrink-0 bg-forest/5 sm:h-64">
                   <Image
                     src={current.media.path}
                     alt={current.media.altText || current.authorLabel}
                     fill
-                    className="object-cover"
+                    className="object-contain"
                     sizes="(max-width: 640px) 100vw, 576px"
                   />
                 </div>

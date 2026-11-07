@@ -33,11 +33,6 @@ export default async function DonacionesPage() {
 
         <Container className="relative -mt-4 max-w-3xl sm:-mt-6">
           <DonationWidget amounts={amounts} whatsapp={settings.whatsapp} />
-          {settings.donationBankInfo && (
-            <p className="prose-content mt-5 rounded-2xl border border-border bg-white p-5 text-sm text-forest/70">
-              {settings.donationBankInfo}
-            </p>
-          )}
         </Container>
       </section>
 
@@ -67,19 +62,6 @@ export default async function DonacionesPage() {
                 <li>Consultas con especialistas externos necesarios.</li>
               </ul>
             </div>
-          </div>
-        </Container>
-      </section>
-
-      {/* ───────────── Pago en línea (fase 2, estado honesto) ───────────── */}
-      <section className="pb-20">
-        <Container className="max-w-3xl">
-          <div className="rounded-2xl border border-dashed border-border p-6">
-            <h2 className="font-subheading text-sm text-forest">Pago en línea (próximamente)</h2>
-            <p className="mt-2 text-sm text-forest/60">
-              Estamos preparando el pago en línea con Transbank y Mercado Pago. Esta opción se activará una
-              vez que la fundación cuente con sus credenciales comerciales oficiales.
-            </p>
           </div>
         </Container>
       </section>

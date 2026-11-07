@@ -1,17 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { formatCLP } from "@/lib/utils";
 import { createTransbankDonationAction } from "@/lib/actions/donation-actions";
 
-type Method = "transferencia" | "webpay" | "mercadopago" | "prepago" | "servipag";
+type Method = "transferencia" | "webpay" | "mercadopago";
 
 const METHODS: { id: Method; label: string; hint: string; icon: string; active: boolean }[] = [
-  { id: "transferencia", label: "Transferencia bancaria / WhatsApp", hint: "Disponible hoy", icon: "💬", active: true },
-  { id: "webpay", label: "Tarjeta de crédito o débito (Webpay)", hint: "Modo de prueba", icon: "💳", active: true },
+  { id: "transferencia", label: "Transferencia bancaria / WhatsApp", hint: "", icon: "💬", active: true },
+  { id: "webpay", label: "Tarjeta de crédito o débito (Webpay)", hint: "", icon: "💳", active: true },
   { id: "mercadopago", label: "Mercado Pago", hint: "Próximamente", icon: "🛒", active: false },
-  { id: "prepago", label: "Prepago", hint: "Próximamente", icon: "💰", active: false },
-  { id: "servipag", label: "Servipag", hint: "Próximamente", icon: "🏧", active: false },
+];
+
+const ANONYMOUS_EMAIL = "fundacionhoces@gmail.com";
+
+const BANK_DETAILS = [
+  { label: "Nombre", value: "Fundación HOCES" },
+  { label: "Entidad financiera", value: "Banco Estado" },
+  { label: "Tipo de cuenta", value: "Cuenta Vista" },
+  { label: "Número de cuenta", value: "36870052655" },
+  { label: "RUT", value: "65.255.726-6" },
+  { label: "Correo", value: "fundacionhoces@gmail.com" },
 ];
 
 export function DonationWidget({
@@ -33,7 +42,7 @@ export function DonationWidget({
   const [mensual, setMensual] = useState(false);
   const [anonimo, setAnonimo] = useState(false);
   const [dedication, setDedication] = useState("");
-  const [method, setMethod] = useState<Method>("transferencia");
+  const [method, setMethod] = useState<Method>("webpay");
   const [acceptComms, setAcceptComms] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [triedSubmit, setTriedSubmit] = useState(false);
@@ -42,18 +51,44 @@ export function DonationWidget({
   const [webpaySubmitting, setWebpaySubmitting] = useState(false);
   const [webpayError, setWebpayError] = useState("");
 
+  const nombreRef = useRef<HTMLInputElement>(null);
+  const apellidosRef = useRef<HTMLInputElement>(null);
+  const telefonoRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const confirmEmailRef = useRef<HTMLInputElement>(null);
+  const termsRef = useRef<HTMLInputElement>(null);
+
   const customNum = custom ? parseInt(custom, 10) : null;
   const amount = customNum || selected;
 
-  const emailMismatch = email.length > 0 && confirmEmail.length > 0 && email !== confirmEmail;
+  const emailMismatch = !anonimo && email.length > 0 && confirmEmail.length > 0 && email !== confirmEmail;
   const selectedMethod = METHODS.find((m) => m.id === method)!;
-  const missingRequired =
-    (!anonimo && (!nombre || !apellidos)) || !telefono || !email || !confirmEmail || !amount || !acceptTerms;
+  const missingRequired = anonimo
+    ? !amount || !acceptTerms
+    : !nombre || !apellidos || !telefono || !email || !confirmEmail || !amount || !acceptTerms;
   const canSubmit = !missingRequired && !emailMismatch && selectedMethod.active;
 
   const digits = whatsapp.replace(/\D/g, "");
-  const waText = "Hola, quiero ayudar a la fundación haciendo una donación, ¿Me darían los datos bancarios para transferir?";
+  const waText =
+    "Hola, quiero ayudar a la fundación haciendo una donación, ¿Me darían los datos bancarios para transferir?" +
+    (dedication.trim() ? ` (Dedicatoria: ${dedication.trim()})` : "");
   const waHref = `https://wa.me/${digits}?text=${encodeURIComponent(waText)}`;
+
+  function goToField(el: HTMLInputElement | null) {
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.focus({ preventScroll: true });
+  }
+
+  function focusFirstError() {
+    if (!anonimo && !nombre) return goToField(nombreRef.current);
+    if (!anonimo && !apellidos) return goToField(apellidosRef.current);
+    if (!anonimo && !telefono) return goToField(telefonoRef.current);
+    if (!anonimo && !email) return goToField(emailRef.current);
+    if (!anonimo && (!confirmEmail || emailMismatch)) return goToField(confirmEmailRef.current);
+    if (!amount) return;
+    if (!acceptTerms) return goToField(termsRef.current);
+  }
 
   async function handleWebpaySubmit() {
     if (!amount) return;
@@ -62,7 +97,8 @@ export function DonationWidget({
     const result = await createTransbankDonationAction({
       amount,
       donorName: anonimo ? "Donante anónimo" : `${nombre} ${apellidos}`,
-      donorEmail: email,
+      donorEmail: anonimo ? ANONYMOUS_EMAIL : email,
+      dedication,
     });
     if (!result.ok) {
       setWebpayError(result.message);
@@ -175,87 +211,113 @@ export function DonationWidget({
           </div>
 
           {!anonimo && (
+            <>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="nombre" className="text-xs font-semibold uppercase tracking-wide text-forest/70">
+                    Nombre *
+                  </label>
+                  <input
+                    id="nombre"
+                    ref={nombreRef}
+                    type="text"
+                    value={nombre}
+                    onChange={(e) => setNombre(e.target.value)}
+                    placeholder="Juan"
+                    className={`mt-1 w-full rounded-lg border bg-white px-3.5 py-2 text-sm text-forest outline-none focus:ring-2 ${
+                      triedSubmit && !nombre ? "border-red-400 focus:border-red-500 focus:ring-red-200" : "border-border focus:border-olive focus:ring-olive/30"
+                    }`}
+                  />
+                  {triedSubmit && !nombre && <p className="mt-1 text-xs text-red-600">Ingresa tu nombre.</p>}
+                </div>
+                <div>
+                  <label htmlFor="apellidos" className="text-xs font-semibold uppercase tracking-wide text-forest/70">
+                    Apellidos *
+                  </label>
+                  <input
+                    id="apellidos"
+                    ref={apellidosRef}
+                    type="text"
+                    value={apellidos}
+                    onChange={(e) => setApellidos(e.target.value)}
+                    placeholder="Pérez"
+                    className={`mt-1 w-full rounded-lg border bg-white px-3.5 py-2 text-sm text-forest outline-none focus:ring-2 ${
+                      triedSubmit && !apellidos ? "border-red-400 focus:border-red-500 focus:ring-red-200" : "border-border focus:border-olive focus:ring-olive/30"
+                    }`}
+                  />
+                  {triedSubmit && !apellidos && <p className="mt-1 text-xs text-red-600">Ingresa tus apellidos.</p>}
+                </div>
+              </div>
+
+              <div className="mt-3">
+                <label htmlFor="telefono" className="text-xs font-semibold uppercase tracking-wide text-forest/70">
+                  Teléfono *
+                </label>
+                <div
+                  className={`mt-1 flex items-center rounded-lg border bg-white px-3.5 focus-within:ring-2 ${
+                    triedSubmit && !telefono
+                      ? "border-red-400 focus-within:border-red-500 focus-within:ring-red-200"
+                      : "border-border focus-within:border-olive focus-within:ring-olive/30"
+                  }`}
+                >
+                  <span className="text-sm text-forest/70">+56</span>
+                  <input
+                    id="telefono"
+                    ref={telefonoRef}
+                    type="text"
+                    inputMode="numeric"
+                    value={telefono}
+                    onChange={(e) => setTelefono(e.target.value.replace(/\D/g, ""))}
+                    placeholder="12345678"
+                    className="w-full bg-transparent px-2 py-2 text-sm text-forest outline-none"
+                  />
+                </div>
+                {triedSubmit && !telefono && <p className="mt-1 text-xs text-red-600">Ingresa tu teléfono.</p>}
+              </div>
+            </>
+          )}
+
+          {!anonimo && (
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <div>
-                <label htmlFor="nombre" className="text-xs font-semibold uppercase tracking-wide text-forest/70">
-                  Nombre *
+                <label htmlFor="email" className="text-xs font-semibold uppercase tracking-wide text-forest/70">
+                  Correo electrónico *
                 </label>
                 <input
-                  id="nombre"
-                  type="text"
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  placeholder="Juan"
-                  className="mt-1 w-full rounded-lg border border-border bg-white px-3.5 py-2 text-sm text-forest outline-none focus:border-olive focus:ring-2 focus:ring-olive/30"
+                  id="email"
+                  ref={emailRef}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="donando@donando.com"
+                  className={`mt-1 w-full rounded-lg border bg-white px-3.5 py-2 text-sm text-forest outline-none focus:ring-2 ${
+                    triedSubmit && !email ? "border-red-400 focus:border-red-500 focus:ring-red-200" : "border-border focus:border-olive focus:ring-olive/30"
+                  }`}
                 />
-                {triedSubmit && !nombre && <p className="mt-1 text-xs text-red-600">Ingresa tu nombre.</p>}
+                {triedSubmit && !email && <p className="mt-1 text-xs text-red-600">Ingresa tu correo.</p>}
               </div>
               <div>
-                <label htmlFor="apellidos" className="text-xs font-semibold uppercase tracking-wide text-forest/70">
-                  Apellidos *
+                <label htmlFor="confirmEmail" className="text-xs font-semibold uppercase tracking-wide text-forest/70">
+                  Confirmar correo electrónico *
                 </label>
                 <input
-                  id="apellidos"
-                  type="text"
-                  value={apellidos}
-                  onChange={(e) => setApellidos(e.target.value)}
-                  placeholder="Pérez"
-                  className="mt-1 w-full rounded-lg border border-border bg-white px-3.5 py-2 text-sm text-forest outline-none focus:border-olive focus:ring-2 focus:ring-olive/30"
+                  id="confirmEmail"
+                  ref={confirmEmailRef}
+                  type="email"
+                  value={confirmEmail}
+                  onChange={(e) => setConfirmEmail(e.target.value)}
+                  placeholder="donando@donando.com"
+                  className={`mt-1 w-full rounded-lg border bg-white px-3.5 py-2 text-sm text-forest outline-none focus:ring-2 ${
+                    emailMismatch || (triedSubmit && !confirmEmail)
+                      ? "border-red-400 focus:border-red-500 focus:ring-red-200"
+                      : "border-border focus:border-olive focus:ring-olive/30"
+                  }`}
                 />
-                {triedSubmit && !apellidos && <p className="mt-1 text-xs text-red-600">Ingresa tus apellidos.</p>}
+                {triedSubmit && !confirmEmail && <p className="mt-1 text-xs text-red-600">Confirma tu correo.</p>}
+                {emailMismatch && <p className="mt-1 text-xs text-red-600">Los correos no coinciden.</p>}
               </div>
             </div>
           )}
-
-          <div className="mt-3">
-            <label htmlFor="telefono" className="text-xs font-semibold uppercase tracking-wide text-forest/70">
-              Teléfono *
-            </label>
-            <div className="mt-1 flex items-center rounded-lg border border-border bg-white px-3.5 focus-within:border-olive focus-within:ring-2 focus-within:ring-olive/30">
-              <span className="text-sm text-forest/70">+56</span>
-              <input
-                id="telefono"
-                type="text"
-                inputMode="numeric"
-                value={telefono}
-                onChange={(e) => setTelefono(e.target.value.replace(/\D/g, ""))}
-                placeholder="12345678"
-                className="w-full bg-transparent px-2 py-2 text-sm text-forest outline-none"
-              />
-            </div>
-            {triedSubmit && !telefono && <p className="mt-1 text-xs text-red-600">Ingresa tu teléfono.</p>}
-          </div>
-
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <div>
-              <label htmlFor="email" className="text-xs font-semibold uppercase tracking-wide text-forest/70">
-                Correo electrónico *
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="donando@donando.com"
-                className="mt-1 w-full rounded-lg border border-border bg-white px-3.5 py-2 text-sm text-forest outline-none focus:border-olive focus:ring-2 focus:ring-olive/30"
-              />
-              {triedSubmit && !email && <p className="mt-1 text-xs text-red-600">Ingresa tu correo.</p>}
-            </div>
-            <div>
-              <label htmlFor="confirmEmail" className="text-xs font-semibold uppercase tracking-wide text-forest/70">
-                Confirmar correo electrónico *
-              </label>
-              <input
-                id="confirmEmail"
-                type="email"
-                value={confirmEmail}
-                onChange={(e) => setConfirmEmail(e.target.value)}
-                placeholder="donando@donando.com"
-                className="mt-1 w-full rounded-lg border border-border bg-white px-3.5 py-2 text-sm text-forest outline-none focus:border-olive focus:ring-2 focus:ring-olive/30"
-              />
-              {emailMismatch && <p className="mt-1 text-xs text-red-600">Los correos no coinciden.</p>}
-            </div>
-          </div>
 
           <div className="mt-3">
             <label htmlFor="dedication" className="text-xs font-semibold uppercase tracking-wide text-forest/70">
@@ -292,10 +354,26 @@ export function DonationWidget({
                   <span aria-hidden="true">{m.icon}</span>
                   {m.label}
                 </span>
-                <span className={`text-xs font-semibold ${m.active ? "text-olive" : "text-forest/60"}`}>{m.hint}</span>
+                {m.hint && (
+                  <span className={`text-xs font-semibold ${m.active ? "text-olive" : "text-forest/60"}`}>{m.hint}</span>
+                )}
               </label>
             ))}
           </div>
+
+          {method === "transferencia" && (
+            <div className="mt-3 animate-[fadeIn_0.25s_ease-out] rounded-xl border border-olive/30 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-forest/70">Datos para transferir</p>
+              <dl className="mt-2 space-y-1.5">
+                {BANK_DETAILS.map((row) => (
+                  <div key={row.label} className="flex justify-between gap-3 text-sm">
+                    <dt className="text-forest/60">{row.label}</dt>
+                    <dd className="text-right font-semibold text-forest">{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
 
           <div className="mt-3 space-y-2">
             <label className="flex items-start gap-2.5 text-sm text-forest/80">
@@ -310,6 +388,7 @@ export function DonationWidget({
             <label className="flex items-start gap-2.5 text-sm text-forest/80">
               <input
                 type="checkbox"
+                ref={termsRef}
                 checked={acceptTerms}
                 onChange={(e) => setAcceptTerms(e.target.checked)}
                 className="mt-0.5 accent-olive"
@@ -352,7 +431,10 @@ export function DonationWidget({
           ) : (
             <button
               type="button"
-              onClick={() => setTriedSubmit(true)}
+              onClick={() => {
+                setTriedSubmit(true);
+                focusFirstError();
+              }}
               className="mt-4 w-full rounded-full bg-forest px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#15300f] disabled:opacity-60"
             >
               Donar {amount ? formatCLP(amount) : ""}
@@ -365,18 +447,11 @@ export function DonationWidget({
               continuar ahora: coordinamos tu donación directamente contigo.
             </p>
           )}
-          {method === "webpay" && (
-            <p className="mt-2 text-xs text-forest/60">
-              Webpay está conectado en modo de prueba (ambiente de integración de Transbank): no se realizan
-              cobros reales todavía.
-            </p>
-          )}
         </div>
       )}
       <p className="mt-3 text-xs text-forest/70">
-        Hoy puedes donar por WhatsApp (coordinamos todo contigo) o con Webpay en modo de prueba. Mercado
-        Pago y otros medios se activarán cuando la fundación cuente con sus credenciales comerciales
-        oficiales.
+        Puedes donar por transferencia bancaria / WhatsApp o con tarjeta de crédito o débito (Webpay).
+        Mercado Pago estará disponible próximamente.
       </p>
     </div>
   );

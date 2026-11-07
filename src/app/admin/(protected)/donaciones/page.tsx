@@ -15,28 +15,11 @@ export default async function AdminDonationsPage() {
       </p>
 
       <div className="mt-8 rounded-2xl border border-dashed border-border bg-surface-muted p-6">
-        <h2 className="font-subheading text-base text-forest">Estado: Webpay conectado en modo de prueba</h2>
+        <h2 className="font-subheading text-base text-forest">Estado: Webpay conectado en producción</h2>
         <p className="mt-2 text-sm text-forest/70">
-          Webpay Plus ya está integrado y funcionando en el <strong>ambiente de integración</strong> de
-          Transbank (sandbox): los pagos que entran por el sitio público usan credenciales de prueba y no
-          mueven dinero real. Mercado Pago todavía no está conectado.
+          Webpay Plus está activo con las credenciales productivas de Transbank: los pagos que entran por el
+          sitio público mueven dinero real. Mercado Pago todavía no está conectado.
         </p>
-        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-forest/70">
-          <li>
-            Afiliar a la fundación como comercio en Transbank (RUT, certificado de vigencia, representante
-            legal y cuenta bancaria de la fundación) para obtener código de comercio y API key productivos.
-          </li>
-          <li>
-            Reemplazar <code>TRANSBANK_COMMERCE_CODE</code> / <code>TRANSBANK_API_KEY</code> por los valores
-            reales y cambiar <code>TRANSBANK_ENVIRONMENT</code> a <code>&quot;production&quot;</code> cuando
-            Transbank valide la integración.
-          </li>
-          <li>Crear una cuenta de Mercado Pago y obtener el Access Token y Public Key, si se quiere activar también.</li>
-          <li>
-            Definir si se activará también el sistema de reserva de horas con abono (mencionado por la
-            fundación, con un abono sugerido de {formatCLP(10000)}).
-          </li>
-        </ul>
       </div>
 
       <div className="mt-8">
@@ -52,6 +35,8 @@ export default async function AdminDonationsPage() {
               <thead className="bg-surface-muted text-xs uppercase text-forest/60">
                 <tr>
                   <th className="px-4 py-3">Monto</th>
+                  <th className="px-4 py-3">Donante</th>
+                  <th className="px-4 py-3">Dedicatoria</th>
                   <th className="px-4 py-3">Pasarela</th>
                   <th className="px-4 py-3">Estado</th>
                   <th className="px-4 py-3">Fecha</th>
@@ -61,6 +46,8 @@ export default async function AdminDonationsPage() {
                 {donations.map((d) => (
                   <tr key={d.id} className="border-t border-border">
                     <td className="px-4 py-3">{formatCLP(d.amount)}</td>
+                    <td className="px-4 py-3">{d.donorName || "—"}</td>
+                    <td className="px-4 py-3">{d.dedication || "—"}</td>
                     <td className="px-4 py-3">{d.gateway}</td>
                     <td className="px-4 py-3">{d.status}</td>
                     <td className="px-4 py-3">{d.createdAt.toLocaleDateString("es-CL")}</td>

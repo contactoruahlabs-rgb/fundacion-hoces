@@ -8,6 +8,7 @@ import { TextInput, TextArea, Checkbox, FormField } from "@/components/admin/For
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { FormStatusBanner } from "@/components/admin/FormStatusBanner";
 import { ImagePicker, type MediaOption } from "@/components/admin/ImagePicker";
+import { HeroImagesPicker } from "@/components/admin/HeroImagesPicker";
 import type { HomeBlock } from "@prisma/client";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -71,13 +72,16 @@ export function HomeBlockForm({ block, mediaOptions }: { block: HomeBlock; media
           )}
 
           {block.type === "HERO" && (
-            <ImagePicker name="imageId" label="Imagen de fondo (opcional)" options={mediaOptions} defaultValue={block.imageId} />
+            <>
+              <ImagePicker name="imageId" label="Imagen de fondo (opcional)" options={mediaOptions} defaultValue={block.imageId} />
+              <HeroImagesPicker name="extraJson" options={mediaOptions} defaultExtraJson={block.extraJson} />
+            </>
           )}
 
           <FormField label="Orden" name="order" error={state.fieldErrors?.order}>
             <TextInput id={`order-${block.id}`} name="order" type="number" defaultValue={block.order} />
           </FormField>
-          <input type="hidden" name="extraJson" value={block.extraJson} />
+          {block.type !== "HERO" && <input type="hidden" name="extraJson" value={block.extraJson} />}
 
           <FormStatusBanner state={state} />
           <SubmitButton>Guardar sección</SubmitButton>

@@ -7,7 +7,8 @@ import { ButtonLink } from "@/components/site/Button";
 import { Eyebrow } from "@/components/site/Eyebrow";
 import { PillarRow } from "@/components/site/PillarRow";
 import { ProgramsCarousel } from "@/components/site/ProgramsCarousel";
-import { StoryCard } from "@/components/site/StoryCard";
+import { NewsGrid } from "@/components/site/NewsGrid";
+import { HeroCarousel } from "@/components/site/HeroCarousel";
 import { OliveBranchOrnament, SeedClusterOrnament } from "@/components/site/BrandOrnament";
 import { DonationWidget } from "@/components/site/DonationWidget";
 import { richTextToHtml } from "@/lib/utils";
@@ -23,6 +24,22 @@ export default async function HomePage() {
 
   const byType = Object.fromEntries(blocks.map((b) => [b.type, b]));
   const amounts: number[] = JSON.parse(settings.donationSuggestedAmounts || "[]");
+
+  const heroImageIds: string[] = (() => {
+    try {
+      const ids = JSON.parse(byType.HERO?.extraJson || "{}").heroImages;
+      return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === "string") : [];
+    } catch {
+      return [];
+    }
+  })();
+  const heroImagesById = heroImageIds.length
+    ? Object.fromEntries((await prisma.media.findMany({ where: { id: { in: heroImageIds } } })).map((m) => [m.id, m]))
+    : {};
+  const heroCarouselImages = heroImageIds
+    .map((id) => heroImagesById[id])
+    .filter((m): m is NonNullable<typeof m> => Boolean(m))
+    .map((m) => ({ path: m.path, altText: m.altText }));
 
   // En la portada mostramos solo el primer párrafo (ya es una idea completa
   // y autocontenida) para no ocupar tanto espacio; el texto completo vive en
@@ -52,15 +69,19 @@ export default async function HomePage() {
       {/* ───────────── HERO ───────────── */}
       {byType.HERO && (
         <section className="relative overflow-hidden">
-          {byType.HERO.image ? (
+          {byType.HERO.image || heroCarouselImages.length > 0 ? (
             <div className="relative flex min-h-[520px] items-end sm:min-h-[620px]">
-              <Image
-                src={byType.HERO.image.path}
-                alt={byType.HERO.image.altText || ""}
-                fill
-                priority
-                className="object-cover"
-              />
+              {heroCarouselImages.length > 1 ? (
+                <HeroCarousel images={heroCarouselImages} />
+              ) : (
+                <Image
+                  src={heroCarouselImages[0]?.path ?? byType.HERO.image!.path}
+                  alt={heroCarouselImages[0]?.altText ?? byType.HERO.image!.altText ?? ""}
+                  fill
+                  priority
+                  className="object-cover"
+                />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-forest/95 via-forest/50 to-forest/10" />
               <Container className="relative w-full pb-16 pt-32 sm:pb-24">
                 <Eyebrow tone="white">Fundación HOCES</Eyebrow>
@@ -219,19 +240,19 @@ export default async function HomePage() {
                 Ver todas
               </ButtonLink>
             </div>
-            <div className="mt-10 grid gap-6 sm:grid-cols-3">
-              {news.map((n) => (
-                <StoryCard
-                  key={n.id}
-                  slug={n.slug}
-                  title={n.title}
-                  subtitle={n.subtitle}
-                  category={n.category}
-                  coverImage={n.coverImage}
-                  publishedAt={n.publishedAt}
-                />
-              ))}
-            </div>
+            <NewsGrid
+              posts={news.map((n) => ({
+                id: n.id,
+                slug: n.slug,
+                title: n.title,
+                subtitle: n.subtitle,
+                category: n.category,
+                author: n.author,
+                coverImage: n.coverImage,
+                publishedAt: n.publishedAt ? n.publishedAt.toISOString() : null,
+                bodyHtml: richTextToHtml(n.body),
+              }))}
+            />
           </Container>
         </section>
       )}

@@ -39,6 +39,8 @@ export function Header({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [desktopDropdownOpen, setDesktopDropdownOpen] = useState(false);
+  const desktopNavRef = useRef<HTMLDivElement>(null);
   const logoClicks = useRef<{ count: number; timer: ReturnType<typeof setTimeout> | null }>({
     count: 0,
     timer: null,
@@ -67,6 +69,17 @@ export function Header({
       document.documentElement.style.overflow = "";
     };
   }, [open]);
+
+  // En tablets (sin hover real) el submenú de escritorio se abre con un toque;
+  // cerramos al tocar fuera, porque ahí no hay :hover que lo cierre por sí solo.
+  useEffect(() => {
+    if (!desktopDropdownOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (!desktopNavRef.current?.contains(e.target as Node)) setDesktopDropdownOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [desktopDropdownOpen]);
 
   const closeMenu = () => {
     setOpen(false);
@@ -103,17 +116,27 @@ export function Header({
           {NAV_ITEMS.map((item) => {
             const active = isActive(item);
             return (
-              <div key={item.href} className="group relative">
-                <Link
-                  href={item.href}
-                  className="relative flex items-center gap-1 py-1 font-subheading text-sm text-forest transition-colors hover:text-olive"
-                  aria-current={active ? "page" : undefined}
-                >
-                  {item.label}
+              <div key={item.href} className="group relative" ref={item.children ? desktopNavRef : undefined}>
+                <span className="relative flex items-center gap-1 py-1">
+                  <Link
+                    href={item.href}
+                    className="font-subheading text-sm text-forest transition-colors hover:text-olive"
+                    aria-current={active ? "page" : undefined}
+                  >
+                    {item.label}
+                  </Link>
                   {item.children && (
-                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true" className="mt-px">
-                      <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                    <button
+                      type="button"
+                      aria-label={`${desktopDropdownOpen ? "Cerrar" : "Abrir"} submenú de ${item.label}`}
+                      aria-expanded={desktopDropdownOpen}
+                      onClick={() => setDesktopDropdownOpen((v) => !v)}
+                      className="p-1 text-forest transition-colors hover:text-olive"
+                    >
+                      <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                        <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
                   )}
                   <span
                     className={`absolute -bottom-0.5 left-0 h-[2px] w-full origin-left bg-olive transition-transform duration-200 ${
@@ -121,15 +144,22 @@ export function Header({
                     }`}
                     aria-hidden="true"
                   />
-                </Link>
+                </span>
 
                 {item.children && (
-                  <div className="pointer-events-none absolute left-1/2 top-full z-10 -translate-x-1/2 pt-2 opacity-0 transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100">
+                  <div
+                    className={`absolute left-1/2 top-full z-10 -translate-x-1/2 pt-2 transition-opacity duration-150 ${
+                      desktopDropdownOpen
+                        ? "pointer-events-auto opacity-100"
+                        : "pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100"
+                    }`}
+                  >
                     <div className="min-w-[180px] rounded-xl border border-border bg-white py-2 shadow-lg">
                       {item.children.map((child) => (
                         <Link
                           key={child.href}
                           href={child.href}
+                          onClick={() => setDesktopDropdownOpen(false)}
                           className={`block px-4 py-2.5 font-subheading text-sm ${
                             pathname === child.href ? "text-olive" : "text-forest hover:text-olive"
                           }`}
