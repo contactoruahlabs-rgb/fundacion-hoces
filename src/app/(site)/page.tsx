@@ -83,13 +83,15 @@ export default async function HomePage() {
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-forest/95 via-forest/50 to-forest/10" />
-              <Container className="relative w-full pb-16 pt-32 sm:pb-24">
+              <Container className="relative w-full pb-8 pt-20 text-center sm:pb-24 sm:pt-32 sm:text-left">
                 <Eyebrow tone="white">Fundación HOCES</Eyebrow>
-                <h1 className="mt-4 max-w-2xl font-heading text-4xl font-extrabold text-white sm:text-5xl lg:text-6xl">
+                <h1 className="mx-auto mt-2 max-w-2xl font-heading text-2xl font-extrabold leading-tight text-white sm:mx-0 sm:mt-4 sm:text-5xl sm:leading-tight lg:text-6xl">
                   {byType.HERO.title}
                 </h1>
-                <p className="mt-5 max-w-xl text-lg text-white/90">{byType.HERO.subtitle}</p>
-                <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+                <p className="mx-auto mt-2 max-w-xl text-sm leading-snug text-white/90 sm:mx-0 sm:mt-5 sm:text-lg sm:leading-normal">
+                  {byType.HERO.subtitle}
+                </p>
+                <div className="mt-4 flex flex-col items-center gap-2.5 sm:mt-8 sm:flex-row sm:flex-wrap sm:gap-4">
                   {byType.HERO.ctaLabel && (
                     <ButtonLink href={byType.HERO.ctaLink || "/contacto"} className="w-full justify-center sm:w-auto">
                       {byType.HERO.ctaLabel}
