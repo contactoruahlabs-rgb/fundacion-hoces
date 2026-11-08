@@ -22,8 +22,6 @@ const IMAGE_SIGNATURES: Array<{ mime: string; check: (b: Buffer) => boolean }> =
   { mime: "image/avif", check: (b) => b.subarray(4, 8).toString("ascii") === "ftyp" && b.subarray(8, 12).toString("ascii").includes("av") },
 ];
 
-const PDF_SIGNATURE = (b: Buffer) => b.subarray(0, 5).toString("ascii") === "%PDF-";
-
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB
 export const MAX_DOCUMENT_BYTES = 25 * 1024 * 1024; // 25MB
 
@@ -92,27 +90,6 @@ export async function saveImageUpload(file: File) {
   };
 }
 
-export async function saveDocumentUpload(file: File) {
-  if (file.size === 0) throw new UploadValidationError("El archivo está vacío.");
-  if (file.size > MAX_DOCUMENT_BYTES) {
-    throw new UploadValidationError("El documento supera el tamaño máximo permitido (25MB).");
-  }
-  const buffer = Buffer.from(await file.arrayBuffer());
-  if (!PDF_SIGNATURE(buffer)) {
-    throw new UploadValidationError("El archivo no es un PDF válido.");
-  }
-
-  const key = `documents/${randomUUID()}.pdf`;
-  const publicUrl = await uploadToBucket(key, buffer, "application/pdf");
-
-  return {
-    path: publicUrl,
-    filename: key.split("/").pop()!,
-    mimeType: "application/pdf",
-    size: buffer.length,
-  };
-}
-
 const ALLOWED_IMAGE_MIME_TO_EXT: Record<string, string> = {
   "image/png": ".png",
   "image/jpeg": ".jpg",
@@ -139,6 +116,32 @@ export async function createImageUploadTicket(mimeType: string, size: number) {
   }
 
   const key = `images/${randomUUID()}${ext}`;
+  const supabase = getClient();
+  const { data, error } = await supabase.storage.from(SUPABASE_BUCKET).createSignedUploadUrl(key);
+  if (error) throw new Error(`No se pudo preparar la subida: ${error.message}`);
+
+  const publicUrl = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(key).data.publicUrl;
+  return {
+    path: key,
+    filename: key.split("/").pop()!,
+    signedUrl: data.signedUrl,
+    publicUrl,
+  };
+}
+
+// Mismo motivo que createImageUploadTicket: un PDF de memoria anual suele
+// superar los ~4.5MB que Vercel permite en el cuerpo de una función
+// serverless, así que el navegador lo sube directo a Supabase Storage.
+export async function createDocumentUploadTicket(mimeType: string, size: number) {
+  if (mimeType !== "application/pdf") {
+    throw new UploadValidationError("El archivo no es un PDF válido.");
+  }
+  if (size <= 0) throw new UploadValidationError("El archivo está vacío.");
+  if (size > MAX_DOCUMENT_BYTES) {
+    throw new UploadValidationError("El documento supera el tamaño máximo permitido (25MB).");
+  }
+
+  const key = `documents/${randomUUID()}.pdf`;
   const supabase = getClient();
   const { data, error } = await supabase.storage.from(SUPABASE_BUCKET).createSignedUploadUrl(key);
   if (error) throw new Error(`No se pudo preparar la subida: ${error.message}`);

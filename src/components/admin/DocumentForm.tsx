@@ -1,13 +1,15 @@
 "use client";
 
-import { useActionState } from "react";
-import { createDocumentAction, updateDocumentAction } from "@/lib/actions/document-actions";
+import { useActionState, useState } from "react";
+import { createDocumentAction, updateDocumentAction, createDocumentUploadTicketAction } from "@/lib/actions/document-actions";
 import { initialActionState } from "@/lib/action-state";
 import { TextInput, TextArea, Select, FormField } from "@/components/admin/FormField";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { FormStatusBanner } from "@/components/admin/FormStatusBanner";
 import { ImagePicker, type MediaOption } from "@/components/admin/ImagePicker";
 import type { Document } from "@prisma/client";
+
+const MAX_DOCUMENT_BYTES = 25 * 1024 * 1024;
 
 export function DocumentForm({
   document,
@@ -18,6 +20,56 @@ export function DocumentForm({
 }) {
   const action = document ? updateDocumentAction.bind(null, document.id) : createDocumentAction;
   const [state, formAction] = useActionState(action, initialActionState);
+
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [uploadedFile, setUploadedFile] = useState<{ publicUrl: string; fileName: string; fileSize: number } | null>(null);
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setUploadError("");
+    setUploadedFile(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      setUploadError("El archivo no es un PDF válido.");
+      e.target.value = "";
+      return;
+    }
+    if (file.size > MAX_DOCUMENT_BYTES) {
+      setUploadError("El documento supera el tamaño máximo permitido (25MB).");
+      e.target.value = "";
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const ticketRes = await createDocumentUploadTicketAction(file.type, file.size);
+      if (!ticketRes.ok) {
+        setUploadError(ticketRes.message);
+        return;
+      }
+      const { ticket } = ticketRes;
+
+      const uploadRes = await fetch(ticket.signedUrl, {
+        method: "PUT",
+        headers: { "content-type": file.type, "x-upsert": "false", "cache-control": "max-age=3600" },
+        body: file,
+      });
+      if (!uploadRes.ok) {
+        setUploadError("No se pudo subir el archivo al almacenamiento. Intenta nuevamente.");
+        return;
+      }
+
+      setUploadedFile({ publicUrl: ticket.publicUrl, fileName: file.name, fileSize: file.size });
+    } catch {
+      setUploadError("No se pudo subir el archivo. Revisa tu conexión e intenta nuevamente.");
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
+  const needsFile = !document && !uploadedFile;
 
   return (
     <form action={formAction} className="space-y-5">
@@ -45,18 +97,23 @@ export function DocumentForm({
 
       <FormField
         label={document ? "Reemplazar archivo PDF (opcional)" : "Archivo PDF"}
-        name="file"
+        name="pdfFile"
         required={!document}
         hint={document ? `Archivo actual: ${document.fileName}` : "Tamaño máximo 25MB."}
       >
         <input
-          id="file"
-          name="file"
+          id="pdfFile"
           type="file"
           accept="application/pdf"
-          required={!document}
+          onChange={handleFileChange}
           className="w-full rounded-lg border border-border bg-white px-3.5 py-2.5 text-sm"
         />
+        <input type="hidden" name="filePath" value={uploadedFile?.publicUrl ?? ""} />
+        <input type="hidden" name="fileName" value={uploadedFile?.fileName ?? ""} />
+        <input type="hidden" name="fileSize" value={uploadedFile?.fileSize ?? ""} />
+        {isUploading && <p className="mt-1 text-xs text-forest/60">Subiendo…</p>}
+        {uploadedFile && <p className="mt-1 text-xs text-success">{uploadedFile.fileName} listo para guardar.</p>}
+        {uploadError && <p className="mt-1 text-xs text-danger">{uploadError}</p>}
       </FormField>
 
       <ImagePicker name="coverImageId" label="Imagen de portada (opcional)" options={mediaOptions} defaultValue={document?.coverImageId} />
@@ -75,7 +132,7 @@ export function DocumentForm({
       </div>
 
       <FormStatusBanner state={state} />
-      <SubmitButton>{document ? "Guardar cambios" : "Subir documento"}</SubmitButton>
+      <SubmitButton disabled={isUploading || needsFile}>{document ? "Guardar cambios" : "Subir documento"}</SubmitButton>
     </form>
   );
 }
